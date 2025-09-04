@@ -24,8 +24,10 @@ curl http://localhost:9090/metrics
 - **Automated Certificate Management**: Issues missing certificates, renews before expiration with jitter
 - **Health Checks**: TCP-based validation comparing disk vs in-memory certificates  
 - **Prometheus Metrics**: Comprehensive metrics for monitoring certificate lifecycle
-- **Flexible Configuration**: YAML-based config supporting multiple certificates
+- **Flexible Configuration**: YAML-based config supporting multiple certificates and directories
 - **Script Integration**: Optional post-change script execution for service reloads
+- **Certificate Chains**: Automatic inclusion of intermediate certificates in output files
+- **Structured Logging**: JSON or text format with configurable log levels
 
 ## Configuration
 
@@ -38,13 +40,17 @@ prometheus:
   port: 9090
   refresh_interval: 30s
 
+logging:
+  level: info    # debug, info, warn, error
+  format: text   # text or json
+
 certificates:
   - name: web-cert
     role: web-server
     common_name: www.example.com
     certificate: /etc/ssl/web.crt
     key: /etc/ssl/web.key
-    ttl: 30d
+    ttl: 720h    # Go duration format: 24h, 30m, 168h, etc.
     on_change: systemctl reload nginx
     health_check:
       tcp: 127.0.0.1:443
@@ -54,8 +60,11 @@ certificates:
 ## Commands
 
 ```bash
-# Multiple configs
-./cert-manager -c config1.yaml -c config2.yaml
+# Single config file
+./cert-manager --config config.yaml
+
+# Directory with multiple .yml files
+./cert-manager --config /etc/cert-manager/conf.d/
 
 # Show version
 ./cert-manager --version

@@ -4,7 +4,7 @@ import (
 	"cert-manager/pkg/cert"
 	"cert-manager/pkg/health"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -88,7 +88,7 @@ func (c *Collector) StartServer(port int) error {
 	http.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
 	
 	addr := fmt.Sprintf(":%d", port)
-	log.Printf("Starting Prometheus metrics server on %s", addr)
+	slog.Info("Starting Prometheus metrics server", "address", addr)
 	
 	return http.ListenAndServe(addr, nil)
 }
@@ -124,12 +124,12 @@ func (c *Collector) updateHealthCheckMetrics(name string, managed *cert.ManagedC
 
 	result, err := c.healthChecker.Check(managed)
 	if err != nil {
-		log.Printf("Health check error for %s: %v", name, err)
+		slog.Error("Health check error", "certificate", name, "error", err)
 		return
 	}
 
 	if !result.Success {
-		log.Printf("Health check failed for %s: %v", name, result.Error)
+		slog.Warn("Health check failed", "certificate", name, "error", result.Error)
 		return
 	}
 

@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -11,6 +13,7 @@ import (
 type Config struct {
 	Vault        VaultConfig        `yaml:"vault"`
 	Prometheus   PrometheusConfig   `yaml:"prometheus"`
+	Logging      LoggingConfig      `yaml:"logging"`
 	Certificates []CertificateConfig `yaml:"certificates"`
 }
 
@@ -22,6 +25,11 @@ type VaultConfig struct {
 type PrometheusConfig struct {
 	Port            int           `yaml:"port"`
 	RefreshInterval time.Duration `yaml:"refresh_interval"`
+}
+
+type LoggingConfig struct {
+	Level  string `yaml:"level"`
+	Format string `yaml:"format"`
 }
 
 type CertificateConfig struct {
@@ -44,7 +52,45 @@ type HealthCheck struct {
 	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
-func LoadConfig(filename string) (*Config, error) {
+func LoadConfig(path string) (*Config, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to stat path %s: %w", path, err)
+	}
+
+	var configs []*Config
+	
+	if stat.IsDir() {
+		dirConfigs, err := loadConfigFromDirectory(path)
+		if err != nil {
+			return nil, err
+		}
+		configs = dirConfigs
+	} else {
+		config, err := loadConfigFromFile(path)
+		if err != nil {
+			return nil, err
+		}
+		configs = []*Config{config}
+	}
+
+	if len(configs) == 0 {
+		return nil, fmt.Errorf("no configuration files found")
+	}
+
+	merged := configs[0]
+	for i := 1; i < len(configs); i++ {
+		merged.Certificates = append(merged.Certificates, configs[i].Certificates...)
+	}
+
+	if err := validateConfig(merged); err != nil {
+		return nil, fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	return merged, nil
+}
+
+func loadConfigFromFile(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file %s: %w", filename, err)
@@ -55,11 +101,50 @@ func LoadConfig(filename string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file %s: %w", filename, err)
 	}
 
-	if err := validateConfig(&config); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+	return &config, nil
+}
+
+func loadConfigFromDirectory(dir string) ([]*Config, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory %s: %w", dir, err)
 	}
 
-	return &config, nil
+	var configs []*Config
+	var primaryConfig *Config
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		filename := entry.Name()
+		if !strings.HasSuffix(filename, ".yml") && !strings.HasSuffix(filename, ".yaml") {
+			continue
+		}
+
+		fullPath := filepath.Join(dir, filename)
+		config, err := loadConfigFromFile(fullPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if primaryConfig == nil && (config.Vault.Address != "" || config.Vault.Token != "") {
+			primaryConfig = config
+		} else {
+			configs = append(configs, config)
+		}
+	}
+
+	if primaryConfig != nil {
+		configs = append([]*Config{primaryConfig}, configs...)
+	}
+
+	if len(configs) == 0 {
+		return nil, fmt.Errorf("no .yml or .yaml files found in directory %s", dir)
+	}
+
+	return configs, nil
 }
 
 func validateConfig(config *Config) error {
@@ -75,6 +160,24 @@ func validateConfig(config *Config) error {
 	}
 	if config.Prometheus.RefreshInterval == 0 {
 		config.Prometheus.RefreshInterval = 10 * time.Second
+	}
+
+	if config.Logging.Level == "" {
+		config.Logging.Level = "info"
+	}
+	if config.Logging.Format == "" {
+		config.Logging.Format = "text"
+	}
+
+	if config.Logging.Format != "json" && config.Logging.Format != "text" {
+		return fmt.Errorf("logging.format must be 'json' or 'text', got '%s'", config.Logging.Format)
+	}
+
+	validLevels := map[string]bool{
+		"debug": true, "info": true, "warn": true, "error": true,
+	}
+	if !validLevels[config.Logging.Level] {
+		return fmt.Errorf("logging.level must be one of 'debug', 'info', 'warn', 'error', got '%s'", config.Logging.Level)
 	}
 
 	certNames := make(map[string]bool)

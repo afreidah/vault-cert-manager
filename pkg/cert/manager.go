@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -53,7 +53,9 @@ func (m *Manager) AddCertificate(certConfig *config.CertificateConfig) error {
 	managed.RenewalJitter = jitter
 
 	if err := m.loadExistingCertificate(managed); err != nil {
-		log.Printf("No existing certificate found for %s, will issue new one: %v", certConfig.Name, err)
+		slog.Debug("No existing certificate found, will issue new one", 
+			"certificate", certConfig.Name, 
+			"error", err)
 	}
 
 	m.certificates[certConfig.Name] = managed
@@ -63,17 +65,22 @@ func (m *Manager) AddCertificate(certConfig *config.CertificateConfig) error {
 func (m *Manager) ProcessCertificates() error {
 	for name, managed := range m.certificates {
 		if m.needsRenewal(managed) {
-			log.Printf("Certificate %s needs renewal", name)
+			slog.Info("Certificate needs renewal", "certificate", name)
 			if err := m.renewCertificate(managed); err != nil {
-				log.Printf("Failed to renew certificate %s: %v", name, err)
+				slog.Error("Failed to renew certificate", 
+					"certificate", name, 
+					"error", err)
 				continue
 			}
 		}
 
 		if !m.certificateExists(managed) {
-			log.Printf("Certificate %s does not exist on disk, issuing new certificate", name)
+			slog.Info("Certificate does not exist on disk, issuing new certificate", 
+				"certificate", name)
 			if err := m.issueCertificate(managed); err != nil {
-				log.Printf("Failed to issue certificate %s: %v", name, err)
+				slog.Error("Failed to issue certificate", 
+					"certificate", name, 
+					"error", err)
 				continue
 			}
 		}
@@ -128,11 +135,14 @@ func (m *Manager) issueCertificate(managed *ManagedCertificate) error {
 
 	if managed.Config.OnChange != "" {
 		if err := m.runOnChangeScript(managed.Config.OnChange); err != nil {
-			log.Printf("Warning: failed to run on_change script for %s: %v", managed.Config.Name, err)
+			slog.Warn("Failed to run on_change script", 
+				"certificate", managed.Config.Name, 
+				"error", err)
 		}
 	}
 
-	log.Printf("Successfully issued/renewed certificate %s", managed.Config.Name)
+	slog.Info("Successfully issued/renewed certificate", 
+		"certificate", managed.Config.Name)
 	return nil
 }
 
@@ -141,13 +151,18 @@ func (m *Manager) writeCertificateToDisk(managed *ManagedCertificate, certData *
 		return err
 	}
 
+	fullCert := certData.Certificate
+	if certData.CertificateChain != "" {
+		fullCert += "\n" + certData.CertificateChain
+	}
+
 	if managed.Config.IsCombinedFile() {
-		content := certData.Certificate + "\n" + certData.PrivateKey
+		content := fullCert + "\n" + certData.PrivateKey
 		if err := m.writeFileWithPermissions(managed.Config.Certificate, content, 0600, managed.Config.Owner, managed.Config.Group); err != nil {
 			return fmt.Errorf("failed to write combined certificate file: %w", err)
 		}
 	} else {
-		if err := m.writeFileWithPermissions(managed.Config.Certificate, certData.Certificate, 0644, managed.Config.Owner, managed.Config.Group); err != nil {
+		if err := m.writeFileWithPermissions(managed.Config.Certificate, fullCert, 0644, managed.Config.Owner, managed.Config.Group); err != nil {
 			return fmt.Errorf("failed to write certificate file: %w", err)
 		}
 		if err := m.writeFileWithPermissions(managed.Config.Key, certData.PrivateKey, 0600, managed.Config.Owner, managed.Config.Group); err != nil {
@@ -212,7 +227,9 @@ func (m *Manager) writeFileWithPermissions(filename, content string, mode os.Fil
 
 	if owner != "" || group != "" {
 		if err := m.changeOwnership(filename, owner, group); err != nil {
-			log.Printf("Warning: failed to change ownership of %s: %v", filename, err)
+			slog.Warn("Failed to change ownership", 
+				"file", filename, 
+				"error", err)
 		}
 	}
 
@@ -251,7 +268,8 @@ func (m *Manager) runOnChangeScript(script string) error {
 	if err != nil {
 		return fmt.Errorf("script failed with error %v: %s", err, string(output))
 	}
-	log.Printf("On-change script executed successfully: %s", string(output))
+	slog.Debug("On-change script executed successfully", 
+		"output", string(output))
 	return nil
 }
 

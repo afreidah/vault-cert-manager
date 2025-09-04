@@ -19,10 +19,11 @@ type VaultClient struct {
 }
 
 type CertificateData struct {
-	Certificate string
-	PrivateKey  string
-	SerialNumber string
-	Expiration  time.Time
+	Certificate       string
+	PrivateKey        string
+	CertificateChain  string
+	SerialNumber      string
+	Expiration        time.Time
 }
 
 func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
@@ -89,6 +90,27 @@ func (v *VaultClient) IssueCertificate(certConfig *config.CertificateConfig) (*C
 		return nil, fmt.Errorf("private_key not found in vault response")
 	}
 
+	var certificateChain string
+	if chain, ok := resp.Data["ca_chain"]; ok {
+		if chainSlice, ok := chain.([]interface{}); ok {
+			var chainParts []string
+			for _, part := range chainSlice {
+				if chainStr, ok := part.(string); ok {
+					chainParts = append(chainParts, chainStr)
+				}
+			}
+			if len(chainParts) > 0 {
+				certificateChain = strings.Join(chainParts, "\n")
+			}
+		}
+	}
+
+	if certificateChain == "" {
+		if issuingCA, ok := resp.Data["issuing_ca"].(string); ok && issuingCA != "" {
+			certificateChain = issuingCA
+		}
+	}
+
 	serialNumber, _ := resp.Data["serial_number"].(string)
 
 	var expiration time.Time
@@ -97,9 +119,10 @@ func (v *VaultClient) IssueCertificate(certConfig *config.CertificateConfig) (*C
 	}
 
 	return &CertificateData{
-		Certificate:  certificate,
-		PrivateKey:   privateKey,
-		SerialNumber: serialNumber,
-		Expiration:   expiration,
+		Certificate:      certificate,
+		PrivateKey:       privateKey,
+		CertificateChain: certificateChain,
+		SerialNumber:     serialNumber,
+		Expiration:       expiration,
 	}, nil
 }

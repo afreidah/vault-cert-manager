@@ -4,10 +4,11 @@ import (
 	"cert-manager/pkg/cert"
 	"cert-manager/pkg/config"
 	"cert-manager/pkg/health"
+	"cert-manager/pkg/logging"
 	"cert-manager/pkg/metrics"
 	"cert-manager/pkg/vault"
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -23,6 +24,8 @@ type App struct {
 }
 
 func New(cfg *config.Config) (*App, error) {
+	logging.SetupLogger(&cfg.Logging)
+
 	vaultClient, err := vault.NewClient(&cfg.Vault)
 	if err != nil {
 		return nil, err
@@ -51,17 +54,17 @@ func New(cfg *config.Config) (*App, error) {
 }
 
 func (a *App) Run() error {
-	log.Println("Starting cert-manager application")
+	slog.Info("Starting cert-manager application")
 
 	if err := a.certManager.ProcessCertificates(); err != nil {
-		log.Printf("Error processing certificates: %v", err)
+		slog.Error("Error processing certificates", "error", err)
 	}
 
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
 		if err := a.collector.StartServer(a.config.Prometheus.Port); err != nil {
-			log.Printf("Metrics server error: %v", err)
+			slog.Error("Metrics server error", "error", err)
 		}
 	}()
 
@@ -81,7 +84,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) Stop() {
-	log.Println("Stopping cert-manager application")
+	slog.Info("Stopping cert-manager application")
 	a.cancel()
 	a.wg.Wait()
 }
@@ -96,7 +99,7 @@ func (a *App) runCertificateProcessor() {
 			return
 		case <-ticker.C:
 			if err := a.certManager.ProcessCertificates(); err != nil {
-				log.Printf("Error processing certificates: %v", err)
+				slog.Error("Error processing certificates", "error", err)
 			}
 		}
 	}
