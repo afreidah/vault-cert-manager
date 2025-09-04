@@ -1,0 +1,15 @@
+---
+# Minimal configuration example
+vault:
+  address: https://vault.company.local
+  token: s.hvs.abcdef1234567890
+
+prometheus:
+  port: 9090
+
+certificates:
+  - name: simple-cert
+    role: default
+    common_name: service.company.local
+    certificate: /etc/ssl/service.crt
+    key: /etc/ssl/service.key
