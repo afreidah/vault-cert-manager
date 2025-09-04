@@ -36,7 +36,15 @@ func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
 		return nil, fmt.Errorf("failed to create vault client: %w", err)
 	}
 
-	client.SetToken(vaultConfig.Token)
+	// Create and execute the appropriate authenticator
+	authenticator, err := CreateAuthenticator(&vaultConfig.Auth)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create authenticator: %w", err)
+	}
+
+	if err := authenticator.Authenticate(client); err != nil {
+		return nil, fmt.Errorf("failed to authenticate with vault: %w", err)
+	}
 
 	return &VaultClient{
 		client: client,

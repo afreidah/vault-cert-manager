@@ -18,8 +18,34 @@ type Config struct {
 }
 
 type VaultConfig struct {
-	Address string `yaml:"address"`
-	Token   string `yaml:"token"`
+	Address string     `yaml:"address"`
+	Auth    AuthConfig `yaml:"auth"`
+}
+
+type AuthConfig struct {
+	Token *TokenAuth `yaml:"token,omitempty"`
+	GCP   *GCPAuth   `yaml:"gcp,omitempty"`
+	TLS   *TLSAuth   `yaml:"tls,omitempty"`
+}
+
+type TokenAuth struct {
+	Value string `yaml:"value"`
+}
+
+type GCPAuth struct {
+	MountPath       string `yaml:"mount_path,omitempty"`
+	Role            string `yaml:"role"`
+	Type            string `yaml:"type"` // "iam" or "gce"
+	ServiceAccount  string `yaml:"service_account,omitempty"`
+	JWTExp          string `yaml:"jwt_exp,omitempty"`
+	CredentialsFile string `yaml:"credentials_file,omitempty"`
+}
+
+type TLSAuth struct {
+	MountPath string `yaml:"mount_path,omitempty"`
+	CertFile  string `yaml:"cert_file"`
+	KeyFile   string `yaml:"key_file"`
+	Name      string `yaml:"name,omitempty"`
 }
 
 type PrometheusConfig struct {
@@ -129,7 +155,7 @@ func loadConfigFromDirectory(dir string) ([]*Config, error) {
 			return nil, err
 		}
 
-		if primaryConfig == nil && (config.Vault.Address != "" || config.Vault.Token != "") {
+		if primaryConfig == nil && (config.Vault.Address != "" || hasAuthConfig(&config.Vault.Auth)) {
 			primaryConfig = config
 		} else {
 			configs = append(configs, config)
@@ -151,8 +177,9 @@ func validateConfig(config *Config) error {
 	if config.Vault.Address == "" {
 		return fmt.Errorf("vault.address is required")
 	}
-	if config.Vault.Token == "" {
-		return fmt.Errorf("vault.token is required")
+	
+	if err := validateAuthConfig(&config.Vault.Auth); err != nil {
+		return fmt.Errorf("vault.auth: %w", err)
 	}
 
 	if config.Prometheus.Port == 0 {
@@ -218,6 +245,59 @@ func validateConfig(config *Config) error {
 	}
 
 	return nil
+}
+
+func validateAuthConfig(auth *AuthConfig) error {
+	authMethods := 0
+	
+	if auth.Token != nil {
+		authMethods++
+		if auth.Token.Value == "" {
+			return fmt.Errorf("token.value is required")
+		}
+	}
+	
+	if auth.GCP != nil {
+		authMethods++
+		if auth.GCP.Role == "" {
+			return fmt.Errorf("gcp.role is required")
+		}
+		if auth.GCP.Type == "" {
+			return fmt.Errorf("gcp.type is required (must be 'iam' or 'gce')")
+		}
+		if auth.GCP.Type != "iam" && auth.GCP.Type != "gce" {
+			return fmt.Errorf("gcp.type must be 'iam' or 'gce', got '%s'", auth.GCP.Type)
+		}
+		if auth.GCP.MountPath == "" {
+			auth.GCP.MountPath = "gcp"
+		}
+	}
+	
+	if auth.TLS != nil {
+		authMethods++
+		if auth.TLS.CertFile == "" {
+			return fmt.Errorf("tls.cert_file is required")
+		}
+		if auth.TLS.KeyFile == "" {
+			return fmt.Errorf("tls.key_file is required")
+		}
+		if auth.TLS.MountPath == "" {
+			auth.TLS.MountPath = "cert"
+		}
+	}
+	
+	if authMethods == 0 {
+		return fmt.Errorf("exactly one authentication method must be specified (token, gcp, or tls)")
+	}
+	if authMethods > 1 {
+		return fmt.Errorf("only one authentication method can be specified, found %d", authMethods)
+	}
+	
+	return nil
+}
+
+func hasAuthConfig(auth *AuthConfig) bool {
+	return auth.Token != nil || auth.GCP != nil || auth.TLS != nil
 }
 
 func (c *CertificateConfig) IsCombinedFile() bool {

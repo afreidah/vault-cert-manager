@@ -1,0 +1,12 @@
+---
+certificates:
+  - name: database-cert
+    role: database
+    common_name: db.internal.example.com
+    certificate: /etc/mysql/ssl/db.pem
+    key: /etc/mysql/ssl/db.pem
+    ttl: 360h
+    ip_sans:
+      - 10.0.1.100
+      - 10.0.1.101
+    on_change: "systemctl restart mysql"

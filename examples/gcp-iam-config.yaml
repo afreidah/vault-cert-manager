@@ -1,0 +1,27 @@
+---
+# Example GCP IAM authentication configuration
+vault:
+  address: https://vault.example.com
+  auth:
+    gcp:
+      role: iam-role
+      type: iam
+      service_account: vault-client@my-project.iam.gserviceaccount.com
+      jwt_exp: 15m
+      credentials_file: /etc/gcp/service-account.json  # optional
+      mount_path: gcp
+
+prometheus:
+  port: 9090
+
+logging:
+  level: debug
+  format: json
+
+certificates:
+  - name: iam-service-cert
+    role: service-certs
+    common_name: service.my-project.gcp.example.com
+    certificate: /opt/service/ssl/cert.pem
+    key: /opt/service/ssl/key.pem
+    ttl: 168h

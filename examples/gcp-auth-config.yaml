@@ -1,0 +1,29 @@
+---
+# Example GCP authentication configuration
+vault:
+  address: https://vault.example.com
+  auth:
+    gcp:
+      role: gce-role
+      type: gce
+      mount_path: gcp  # optional, defaults to "gcp"
+
+# Prometheus metrics configuration
+prometheus:
+  port: 9090
+  refresh_interval: 30s
+
+# Logging configuration
+logging:
+  level: info
+  format: json
+
+# Certificate configurations
+certificates:
+  - name: gcp-web-cert
+    role: web-server
+    common_name: web.gcp.example.com
+    certificate: /etc/ssl/certs/web.crt
+    key: /etc/ssl/private/web.key
+    ttl: 720h
+    on_change: systemctl reload nginx

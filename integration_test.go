@@ -27,7 +27,9 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 	configContent := `
 vault:
   address: https://vault.example.com
-  token: test-token
+  auth:
+    token:
+      value: test-token
 
 prometheus:
   port: 9092
@@ -101,7 +103,9 @@ func TestIntegration_MultipleConfigFiles(t *testing.T) {
 	config1Content := `
 vault:
   address: https://vault1.example.com
-  token: token1
+  auth:
+    token:
+      value: token1
 
 prometheus:
   port: 9093
@@ -118,7 +122,9 @@ certificates:
 	config2Content := `
 vault:
   address: https://vault2.example.com
-  token: token2
+  auth:
+    token:
+      value: token2
 
 certificates:
   - name: cert2

@@ -13,7 +13,9 @@ func TestLoadConfig_Directory(t *testing.T) {
 	vaultConfig := `
 vault:
   address: https://vault.example.com
-  token: test-token
+  auth:
+    token:
+      value: test-token
 
 prometheus:
   port: 9090
@@ -80,7 +82,9 @@ func TestLoadConfig_DirectoryWithNonYAMLFiles(t *testing.T) {
 	validConfig := `
 vault:
   address: https://vault.example.com
-  token: test-token
+  auth:
+    token:
+      value: test-token
 certificates:
   - name: test-cert
     role: test-role

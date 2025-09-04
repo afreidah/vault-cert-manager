@@ -1,0 +1,15 @@
+---
+certificates:
+  - name: web-server-cert
+    role: web-server
+    common_name: www.example.com
+    certificate: /etc/ssl/certs/web-server.crt
+    key: /etc/ssl/private/web-server.key
+    ttl: 720h
+    alt_names:
+      - www.example.com
+      - example.com
+    on_change: "systemctl reload nginx"
+    health_check:
+      tcp: 127.0.0.1:443
+      timeout: 5s

@@ -1,0 +1,17 @@
+---
+# Main vault configuration
+vault:
+  address: https://vault.example.com
+  auth:
+    token:
+      value: s.1234567890abcdef
+
+# Prometheus metrics configuration
+prometheus:
+  port: 9090
+  refresh_interval: 30s
+
+# Logging configuration
+logging:
+  level: debug
+  format: json

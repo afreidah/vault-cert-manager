@@ -13,11 +13,13 @@ func TestLoadConfig(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name: "valid config",
+			name: "valid token config",
 			content: `
 vault:
   address: https://vault.example.com
-  token: test-token
+  auth:
+    token:
+      value: test-token
 
 prometheus:
   port: 9090
@@ -34,10 +36,46 @@ certificates:
 			expectErr: false,
 		},
 		{
+			name: "valid gcp config",
+			content: `
+vault:
+  address: https://vault.example.com
+  auth:
+    gcp:
+      role: test-role
+      type: gce
+
+certificates:
+  - name: test-cert
+    role: test-role
+    common_name: test.example.com
+    certificate: /tmp/test.crt
+    key: /tmp/test.key
+`,
+			expectErr: false,
+		},
+		{
 			name: "missing vault address",
 			content: `
 vault:
-  token: test-token
+  auth:
+    token:
+      value: test-token
+certificates:
+  - name: test-cert
+    role: test-role
+    common_name: test.example.com
+    certificate: /tmp/test.crt
+    key: /tmp/test.key
+`,
+			expectErr: true,
+		},
+		{
+			name: "no auth method",
+			content: `
+vault:
+  address: https://vault.example.com
+  auth: {}
 certificates:
   - name: test-cert
     role: test-role
@@ -52,7 +90,9 @@ certificates:
 			content: `
 vault:
   address: https://vault.example.com
-  token: test-token
+  auth:
+    token:
+      value: test-token
 certificates:
   - name: test-cert
     role: test-role
@@ -110,7 +150,11 @@ func TestValidateConfig(t *testing.T) {
 			config: Config{
 				Vault: VaultConfig{
 					Address: "https://vault.example.com",
-					Token:   "test-token",
+					Auth: AuthConfig{
+						Token: &TokenAuth{
+							Value: "test-token",
+						},
+					},
 				},
 				Certificates: []CertificateConfig{
 					{
@@ -128,7 +172,11 @@ func TestValidateConfig(t *testing.T) {
 			name: "missing vault address",
 			config: Config{
 				Vault: VaultConfig{
-					Token: "test-token",
+					Auth: AuthConfig{
+						Token: &TokenAuth{
+							Value: "test-token",
+						},
+					},
 				},
 			},
 			expectErr: true,
@@ -138,7 +186,11 @@ func TestValidateConfig(t *testing.T) {
 			config: Config{
 				Vault: VaultConfig{
 					Address: "https://vault.example.com",
-					Token:   "test-token",
+					Auth: AuthConfig{
+						Token: &TokenAuth{
+							Value: "test-token",
+						},
+					},
 				},
 				Certificates: []CertificateConfig{
 					{

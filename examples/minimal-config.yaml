@@ -2,7 +2,9 @@
 # Minimal configuration example
 vault:
   address: https://vault.company.local
-  token: s.hvs.abcdef1234567890
+  auth:
+    token:
+      value: s.hvs.abcdef1234567890
 
 prometheus:
   port: 9090

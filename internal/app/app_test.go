@@ -10,7 +10,11 @@ func TestNew(t *testing.T) {
 	cfg := &config.Config{
 		Vault: config.VaultConfig{
 			Address: "https://vault.example.com",
-			Token:   "test-token",
+			Auth: config.AuthConfig{
+				Token: &config.TokenAuth{
+					Value: "test-token",
+				},
+			},
 		},
 		Prometheus: config.PrometheusConfig{
 			Port:            9090,
@@ -61,7 +65,11 @@ func TestApp_Stop(t *testing.T) {
 	cfg := &config.Config{
 		Vault: config.VaultConfig{
 			Address: "https://vault.example.com",
-			Token:   "test-token",
+			Auth: config.AuthConfig{
+				Token: &config.TokenAuth{
+					Value: "test-token",
+				},
+			},
 		},
 		Prometheus: config.PrometheusConfig{
 			Port:            9091,

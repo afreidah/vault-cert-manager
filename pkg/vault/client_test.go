@@ -13,20 +13,52 @@ func TestNewClient(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name: "valid config",
+			name: "valid token config",
 			config: &config.VaultConfig{
 				Address: "https://vault.example.com",
-				Token:   "test-token",
+				Auth: config.AuthConfig{
+					Token: &config.TokenAuth{
+						Value: "test-token",
+					},
+				},
 			},
 			expectErr: false,
 		},
 		{
-			name: "invalid address",
+			name: "valid gcp config",
 			config: &config.VaultConfig{
-				Address: "invalid-url",
-				Token:   "test-token",
+				Address: "https://vault.example.com",
+				Auth: config.AuthConfig{
+					GCP: &config.GCPAuth{
+						Role:      "test-role",
+						Type:      "gce",
+						MountPath: "gcp",
+					},
+				},
 			},
-			expectErr: false,
+			expectErr: true, // Will fail due to no actual GCP metadata service
+		},
+		{
+			name: "valid tls config",
+			config: &config.VaultConfig{
+				Address: "https://vault.example.com",
+				Auth: config.AuthConfig{
+					TLS: &config.TLSAuth{
+						CertFile:  "/nonexistent/cert.pem",
+						KeyFile:   "/nonexistent/key.pem",
+						MountPath: "cert",
+					},
+				},
+			},
+			expectErr: true, // Will fail due to nonexistent cert files
+		},
+		{
+			name: "no auth method",
+			config: &config.VaultConfig{
+				Address: "https://vault.example.com",
+				Auth:    config.AuthConfig{},
+			},
+			expectErr: true,
 		},
 	}
 
