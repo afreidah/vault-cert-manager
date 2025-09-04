@@ -19,11 +19,11 @@ type VaultClient struct {
 }
 
 type CertificateData struct {
-	Certificate       string
-	PrivateKey        string
-	CertificateChain  string
-	SerialNumber      string
-	Expiration        time.Time
+	Certificate      string
+	PrivateKey       string
+	CertificateChain string
+	SerialNumber     string
+	Expiration       time.Time
 }
 
 func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {

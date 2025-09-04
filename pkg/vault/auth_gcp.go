@@ -52,9 +52,9 @@ func (g *GCPAuthenticator) Authenticate(client *api.Client) error {
 		"jwt":  jwt,
 	}
 
-	slog.Debug("Attempting GCP authentication", 
-		"type", g.config.Type, 
-		"role", g.config.Role, 
+	slog.Debug("Attempting GCP authentication",
+		"type", g.config.Type,
+		"role", g.config.Role,
 		"mount_path", g.config.MountPath)
 
 	resp, err := client.Logical().Write(loginPath, loginData)
@@ -68,7 +68,7 @@ func (g *GCPAuthenticator) Authenticate(client *api.Client) error {
 
 	client.SetToken(resp.Auth.ClientToken)
 	slog.Info("Successfully authenticated with GCP", "auth_type", g.config.Type)
-	
+
 	return nil
 }
 
@@ -76,32 +76,32 @@ func (g *GCPAuthenticator) Authenticate(client *api.Client) error {
 func (g *GCPAuthenticator) getGCEJWT() (string, error) {
 	// GCE instances can get identity tokens directly from the metadata service
 	metadataURL := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
-	
+
 	// Add audience parameter - Vault expects the audience to be the Vault server
 	req, err := http.NewRequest("GET", metadataURL+"?audience=vault&format=full", nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create metadata request: %w", err)
 	}
-	
+
 	req.Header.Set("Metadata-Flavor", "Google")
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve GCE identity token: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("metadata service returned status %d: %s", resp.StatusCode, string(body))
 	}
-	
+
 	token, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read identity token: %w", err)
 	}
-	
+
 	return string(token), nil
 }
 

@@ -8,9 +8,9 @@ import (
 
 func TestCreateAuthenticator(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		authConfig *config.AuthConfig
-		expectErr bool
+		expectErr  bool
 		expectType string
 	}{
 		{
@@ -20,7 +20,7 @@ func TestCreateAuthenticator(t *testing.T) {
 					Value: "test-token",
 				},
 			},
-			expectErr: false,
+			expectErr:  false,
 			expectType: "*vault.TokenAuthenticator",
 		},
 		{
@@ -32,7 +32,7 @@ func TestCreateAuthenticator(t *testing.T) {
 					MountPath: "gcp",
 				},
 			},
-			expectErr: false,
+			expectErr:  false,
 			expectType: "*vault.GCPAuthenticator",
 		},
 		{
@@ -44,13 +44,13 @@ func TestCreateAuthenticator(t *testing.T) {
 					MountPath: "cert",
 				},
 			},
-			expectErr: false,
+			expectErr:  false,
 			expectType: "*vault.TLSAuthenticator",
 		},
 		{
-			name: "no auth method",
+			name:       "no auth method",
 			authConfig: &config.AuthConfig{},
-			expectErr: true,
+			expectErr:  true,
 		},
 		{
 			name: "multiple auth methods",
@@ -61,7 +61,7 @@ func TestCreateAuthenticator(t *testing.T) {
 					Type: "gce",
 				},
 			},
-			expectErr: false, // CreateAuthenticator doesn't validate this, config validation does
+			expectErr:  false,                       // CreateAuthenticator doesn't validate this, config validation does
 			expectType: "*vault.TokenAuthenticator", // Token takes precedence
 		},
 	}

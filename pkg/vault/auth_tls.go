@@ -62,15 +62,15 @@ func (t *TLSAuthenticator) Authenticate(client *api.Client) error {
 	// Prepare login data
 	loginPath := fmt.Sprintf("auth/%s/login", t.config.MountPath)
 	loginData := map[string]interface{}{}
-	
+
 	// Add name if specified (for role-based cert auth)
 	if t.config.Name != "" {
 		loginData["name"] = t.config.Name
 	}
 
-	slog.Debug("Attempting TLS certificate authentication", 
-		"cert_file", t.config.CertFile, 
-		"mount_path", t.config.MountPath, 
+	slog.Debug("Attempting TLS certificate authentication",
+		"cert_file", t.config.CertFile,
+		"mount_path", t.config.MountPath,
 		"name", t.config.Name)
 
 	// Perform the certificate authentication
@@ -86,6 +86,6 @@ func (t *TLSAuthenticator) Authenticate(client *api.Client) error {
 	// Set the token on the original client
 	client.SetToken(resp.Auth.ClientToken)
 	slog.Info("Successfully authenticated with TLS certificate")
-	
+
 	return nil
 }

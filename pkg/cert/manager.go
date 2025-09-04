@@ -20,17 +20,17 @@ import (
 )
 
 type Manager struct {
-	vaultClient vault.Client
+	vaultClient  vault.Client
 	certificates map[string]*ManagedCertificate
 }
 
 type ManagedCertificate struct {
-	Config         *config.CertificateConfig
-	LastRenewed    time.Time
-	NextRenewal    time.Time
-	Certificate    *x509.Certificate
-	Fingerprint    string
-	RenewalJitter  time.Duration
+	Config        *config.CertificateConfig
+	LastRenewed   time.Time
+	NextRenewal   time.Time
+	Certificate   *x509.Certificate
+	Fingerprint   string
+	RenewalJitter time.Duration
 }
 
 func NewManager(vaultClient vault.Client) *Manager {
@@ -53,8 +53,8 @@ func (m *Manager) AddCertificate(certConfig *config.CertificateConfig) error {
 	managed.RenewalJitter = jitter
 
 	if err := m.loadExistingCertificate(managed); err != nil {
-		slog.Debug("No existing certificate found, will issue new one", 
-			"certificate", certConfig.Name, 
+		slog.Debug("No existing certificate found, will issue new one",
+			"certificate", certConfig.Name,
 			"error", err)
 	}
 
@@ -67,19 +67,19 @@ func (m *Manager) ProcessCertificates() error {
 		if m.needsRenewal(managed) {
 			slog.Info("Certificate needs renewal", "certificate", name)
 			if err := m.renewCertificate(managed); err != nil {
-				slog.Error("Failed to renew certificate", 
-					"certificate", name, 
+				slog.Error("Failed to renew certificate",
+					"certificate", name,
 					"error", err)
 				continue
 			}
 		}
 
 		if !m.certificateExists(managed) {
-			slog.Info("Certificate does not exist on disk, issuing new certificate", 
+			slog.Info("Certificate does not exist on disk, issuing new certificate",
 				"certificate", name)
 			if err := m.issueCertificate(managed); err != nil {
-				slog.Error("Failed to issue certificate", 
-					"certificate", name, 
+				slog.Error("Failed to issue certificate",
+					"certificate", name,
 					"error", err)
 				continue
 			}
@@ -135,13 +135,13 @@ func (m *Manager) issueCertificate(managed *ManagedCertificate) error {
 
 	if managed.Config.OnChange != "" {
 		if err := m.runOnChangeScript(managed.Config.OnChange); err != nil {
-			slog.Warn("Failed to run on_change script", 
-				"certificate", managed.Config.Name, 
+			slog.Warn("Failed to run on_change script",
+				"certificate", managed.Config.Name,
 				"error", err)
 		}
 	}
 
-	slog.Info("Successfully issued/renewed certificate", 
+	slog.Info("Successfully issued/renewed certificate",
 		"certificate", managed.Config.Name)
 	return nil
 }
@@ -227,8 +227,8 @@ func (m *Manager) writeFileWithPermissions(filename, content string, mode os.Fil
 
 	if owner != "" || group != "" {
 		if err := m.changeOwnership(filename, owner, group); err != nil {
-			slog.Warn("Failed to change ownership", 
-				"file", filename, 
+			slog.Warn("Failed to change ownership",
+				"file", filename,
 				"error", err)
 		}
 	}
@@ -268,7 +268,7 @@ func (m *Manager) runOnChangeScript(script string) error {
 	if err != nil {
 		return fmt.Errorf("script failed with error %v: %s", err, string(output))
 	}
-	slog.Debug("On-change script executed successfully", 
+	slog.Debug("On-change script executed successfully",
 		"output", string(output))
 	return nil
 }

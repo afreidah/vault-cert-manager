@@ -11,9 +11,9 @@ import (
 )
 
 type Config struct {
-	Vault        VaultConfig        `yaml:"vault"`
-	Prometheus   PrometheusConfig   `yaml:"prometheus"`
-	Logging      LoggingConfig      `yaml:"logging"`
+	Vault        VaultConfig         `yaml:"vault"`
+	Prometheus   PrometheusConfig    `yaml:"prometheus"`
+	Logging      LoggingConfig       `yaml:"logging"`
 	Certificates []CertificateConfig `yaml:"certificates"`
 }
 
@@ -59,18 +59,18 @@ type LoggingConfig struct {
 }
 
 type CertificateConfig struct {
-	Name         string        `yaml:"name"`
-	Role         string        `yaml:"role"`
-	CommonName   string        `yaml:"common_name"`
-	Certificate  string        `yaml:"certificate"`
-	Key          string        `yaml:"key"`
-	TTL          time.Duration `yaml:"ttl"`
-	AltNames     []string      `yaml:"alt_names,omitempty"`
-	IPSans       []string      `yaml:"ip_sans,omitempty"`
-	OnChange     string        `yaml:"on_change,omitempty"`
-	HealthCheck  *HealthCheck  `yaml:"health_check,omitempty"`
-	Owner        string        `yaml:"owner,omitempty"`
-	Group        string        `yaml:"group,omitempty"`
+	Name        string        `yaml:"name"`
+	Role        string        `yaml:"role"`
+	CommonName  string        `yaml:"common_name"`
+	Certificate string        `yaml:"certificate"`
+	Key         string        `yaml:"key"`
+	TTL         time.Duration `yaml:"ttl"`
+	AltNames    []string      `yaml:"alt_names,omitempty"`
+	IPSans      []string      `yaml:"ip_sans,omitempty"`
+	OnChange    string        `yaml:"on_change,omitempty"`
+	HealthCheck *HealthCheck  `yaml:"health_check,omitempty"`
+	Owner       string        `yaml:"owner,omitempty"`
+	Group       string        `yaml:"group,omitempty"`
 }
 
 type HealthCheck struct {
@@ -85,7 +85,7 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	var configs []*Config
-	
+
 	if stat.IsDir() {
 		dirConfigs, err := loadConfigFromDirectory(path)
 		if err != nil {
@@ -177,7 +177,7 @@ func validateConfig(config *Config) error {
 	if config.Vault.Address == "" {
 		return fmt.Errorf("vault.address is required")
 	}
-	
+
 	if err := validateAuthConfig(&config.Vault.Auth); err != nil {
 		return fmt.Errorf("vault.auth: %w", err)
 	}
@@ -249,14 +249,14 @@ func validateConfig(config *Config) error {
 
 func validateAuthConfig(auth *AuthConfig) error {
 	authMethods := 0
-	
+
 	if auth.Token != nil {
 		authMethods++
 		if auth.Token.Value == "" {
 			return fmt.Errorf("token.value is required")
 		}
 	}
-	
+
 	if auth.GCP != nil {
 		authMethods++
 		if auth.GCP.Role == "" {
@@ -272,7 +272,7 @@ func validateAuthConfig(auth *AuthConfig) error {
 			auth.GCP.MountPath = "gcp"
 		}
 	}
-	
+
 	if auth.TLS != nil {
 		authMethods++
 		if auth.TLS.CertFile == "" {
@@ -285,14 +285,14 @@ func validateAuthConfig(auth *AuthConfig) error {
 			auth.TLS.MountPath = "cert"
 		}
 	}
-	
+
 	if authMethods == 0 {
 		return fmt.Errorf("exactly one authentication method must be specified (token, gcp, or tls)")
 	}
 	if authMethods > 1 {
 		return fmt.Errorf("only one authentication method can be specified, found %d", authMethods)
 	}
-	
+
 	return nil
 }
 

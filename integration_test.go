@@ -18,7 +18,7 @@ func TestIntegration_CompleteWorkflow(t *testing.T) {
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "config.yaml")
 	certDir := filepath.Join(tmpDir, "certs")
-	
+
 	err := os.MkdirAll(certDir, 0755)
 	if err != nil {
 		t.Fatalf("failed to create cert directory: %v", err)
@@ -99,7 +99,7 @@ certificates:
 
 func TestIntegration_MultipleConfigFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	
+
 	config1Content := `
 vault:
   address: https://vault1.example.com

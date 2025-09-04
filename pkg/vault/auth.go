@@ -17,14 +17,14 @@ func CreateAuthenticator(authConfig *config.AuthConfig) (Authenticator, error) {
 	if authConfig.Token != nil {
 		return NewTokenAuthenticator(authConfig.Token), nil
 	}
-	
+
 	if authConfig.GCP != nil {
 		return NewGCPAuthenticator(authConfig.GCP), nil
 	}
-	
+
 	if authConfig.TLS != nil {
 		return NewTLSAuthenticator(authConfig.TLS), nil
 	}
-	
+
 	return nil, fmt.Errorf("no valid authentication method found")
 }

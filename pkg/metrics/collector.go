@@ -16,11 +16,11 @@ type Collector struct {
 	healthChecker health.Checker
 	registry      *prometheus.Registry
 
-	lastRenewedTimestamp   *prometheus.GaugeVec
-	notBeforeTimestamp     *prometheus.GaugeVec
-	notAfterTimestamp      *prometheus.GaugeVec
-	renewalsTotal          *prometheus.CounterVec
-	fingerprintInfo        *prometheus.GaugeVec
+	lastRenewedTimestamp *prometheus.GaugeVec
+	notBeforeTimestamp   *prometheus.GaugeVec
+	notAfterTimestamp    *prometheus.GaugeVec
+	renewalsTotal        *prometheus.CounterVec
+	fingerprintInfo      *prometheus.GaugeVec
 
 	renewalCounts map[string]map[string]int
 }
@@ -86,10 +86,10 @@ func NewCollector(certManager *cert.Manager, healthChecker health.Checker) *Coll
 
 func (c *Collector) StartServer(port int) error {
 	http.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
-	
+
 	addr := fmt.Sprintf(":%d", port)
 	slog.Info("Starting Prometheus metrics server", "address", addr)
-	
+
 	return http.ListenAndServe(addr, nil)
 }
 
