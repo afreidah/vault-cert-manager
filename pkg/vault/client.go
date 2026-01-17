@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/config"
+	"cert-manager/pkg/config"
 	"fmt"
 	"net"
 	"strings"

@@ -1,12 +1,12 @@
 package app
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/cert"
-	"github.com/afreidah/vault-cert-manager/pkg/config"
-	"github.com/afreidah/vault-cert-manager/pkg/health"
-	"github.com/afreidah/vault-cert-manager/pkg/logging"
-	"github.com/afreidah/vault-cert-manager/pkg/metrics"
-	"github.com/afreidah/vault-cert-manager/pkg/vault"
+	"cert-manager/pkg/cert"
+	"cert-manager/pkg/config"
+	"cert-manager/pkg/health"
+	"cert-manager/pkg/logging"
+	"cert-manager/pkg/metrics"
+	"cert-manager/pkg/vault"
 	"context"
 	"log/slog"
 	"sync"

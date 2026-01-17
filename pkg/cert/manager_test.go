@@ -1,8 +1,8 @@
 package cert
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/config"
-	"github.com/afreidah/vault-cert-manager/pkg/vault"
+	"cert-manager/pkg/config"
+	"cert-manager/pkg/vault"
 	"fmt"
 	"os"
 	"path/filepath"

@@ -1,10 +1,10 @@
 package metrics
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/cert"
-	"github.com/afreidah/vault-cert-manager/pkg/config"
-	"github.com/afreidah/vault-cert-manager/pkg/health"
-	"github.com/afreidah/vault-cert-manager/pkg/vault"
+	"cert-manager/pkg/cert"
+	"cert-manager/pkg/config"
+	"cert-manager/pkg/health"
+	"cert-manager/pkg/vault"
 	"testing"
 	"time"
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/app"
-	"github.com/afreidah/vault-cert-manager/pkg/config"
+	"cert-manager/pkg/app"
+	"cert-manager/pkg/config"
 	"context"
 	"os"
 	"path/filepath"

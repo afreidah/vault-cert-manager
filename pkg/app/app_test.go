@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/afreidah/vault-cert-manager/pkg/config"
+	"cert-manager/pkg/config"
 	"testing"
 	"time"
 )

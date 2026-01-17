@@ -1,0 +1,19 @@
+#!/bin/bash
+# -------------------------------------------------------------------------------
+# vault-cert-manager - Pre-Remove Script
+#
+# Project: Munchbox / Author: Alex Freidah
+#
+# Stops and disables the service before package removal.
+# -------------------------------------------------------------------------------
+
+set -e
+
+# --- Stop and disable service ---
+if systemctl is-active --quiet vault-cert-manager; then
+    systemctl stop vault-cert-manager
+fi
+
+if systemctl is-enabled --quiet vault-cert-manager 2>/dev/null; then
+    systemctl disable vault-cert-manager
+fi
