@@ -1,7 +1,18 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Integration Tests
+//
+// End-to-end integration tests for the complete application workflow.
+// -------------------------------------------------------------------------------
+
+// Package main contains integration tests for vault-cert-manager.
 package main
 
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
+
 import (
-	"cert-manager/internal/app"
+	"cert-manager/pkg/app"
 	"cert-manager/pkg/config"
 	"context"
 	"os"
@@ -10,6 +21,11 @@ import (
 	"time"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestIntegration_CompleteWorkflow tests the full application lifecycle.
 func TestIntegration_CompleteWorkflow(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -97,6 +113,7 @@ certificates:
 	}
 }
 
+// TestIntegration_MultipleConfigFiles tests loading multiple config files.
 func TestIntegration_MultipleConfigFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 

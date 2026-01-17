@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Metrics Collector Tests
+//
+// Unit tests for Prometheus metrics collection.
+// -------------------------------------------------------------------------------
+
 package metrics
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/cert"
@@ -11,6 +21,11 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestNewCollector verifies collector instance creation.
 func TestNewCollector(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -38,6 +53,7 @@ func TestNewCollector(t *testing.T) {
 	}
 }
 
+// TestCollector_UpdateMetrics verifies metrics refresh functionality.
 func TestCollector_UpdateMetrics(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -68,6 +84,7 @@ func TestCollector_UpdateMetrics(t *testing.T) {
 	}
 }
 
+// TestCollector_IncrementRenewalCounter verifies renewal counter increments.
 func TestCollector_IncrementRenewalCounter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

@@ -1,0 +1,75 @@
+# -------------------------------------------------------------------------------
+# nfpm Configuration - Debian Package Build
+#
+# Project: Munchbox / Author: Alex Freidah
+#
+# Defines package metadata and contents for building .deb packages via nfpm.
+# Includes systemd service, config directory, and post-install scripts.
+# -------------------------------------------------------------------------------
+
+name: vault-cert-manager
+arch: ${GOARCH}
+platform: linux
+version: ${VERSION}
+release: 1
+section: admin
+priority: optional
+maintainer: Alex Freidah <alex@alexfreidah.com>
+description: |
+  Automated certificate lifecycle manager for HashiCorp Vault PKI.
+  Issues, renews, and deploys TLS certificates from Vault's PKI backend.
+vendor: Munchbox
+homepage: https://github.com/afreidah/vault-cert-manager
+license: MIT
+
+# -------------------------------------------------------------------------
+# PACKAGE CONTENTS
+# -------------------------------------------------------------------------
+
+contents:
+  # --- Binary ---
+  - src: ./bin/vault-cert-manager-linux
+    dst: /usr/bin/vault-cert-manager
+    file_info:
+      mode: 0755
+
+  # --- Systemd Unit ---
+  - src: ./packaging/vault-cert-manager.service
+    dst: /lib/systemd/system/vault-cert-manager.service
+    file_info:
+      mode: 0644
+
+  # --- Config Directory ---
+  - dst: /etc/vault-cert-manager
+    type: dir
+    file_info:
+      mode: 0750
+      owner: vault-cert-manager
+      group: vault-cert-manager
+
+  # --- Example Config ---
+  - src: ./packaging/config.example.yaml
+    dst: /etc/vault-cert-manager/config.example.yaml
+    file_info:
+      mode: 0640
+      owner: vault-cert-manager
+      group: vault-cert-manager
+
+# -------------------------------------------------------------------------
+# PACKAGE SCRIPTS
+# -------------------------------------------------------------------------
+
+scripts:
+  postinstall: ./packaging/postinst
+  preremove: ./packaging/prerm
+  postremove: ./packaging/postrm
+
+# -------------------------------------------------------------------------
+# DEPENDENCIES
+# -------------------------------------------------------------------------
+
+depends:
+  - systemd
+
+recommends:
+  - vault

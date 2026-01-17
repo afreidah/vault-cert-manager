@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Configuration Directory Tests
+//
+// Unit tests for directory-based configuration loading.
+// -------------------------------------------------------------------------------
+
 package config
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"os"
@@ -6,6 +16,11 @@ import (
 	"testing"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestLoadConfig_Directory verifies loading and merging configs from a directory.
 func TestLoadConfig_Directory(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -75,6 +90,7 @@ certificates:
 	}
 }
 
+// TestLoadConfig_DirectoryWithNonYAMLFiles verifies non-YAML files are ignored.
 func TestLoadConfig_DirectoryWithNonYAMLFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 

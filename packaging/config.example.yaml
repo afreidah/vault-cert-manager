@@ -1,0 +1,59 @@
+# -------------------------------------------------------------------------------
+# vault-cert-manager - Example Configuration
+#
+# Project: Munchbox / Author: Alex Freidah
+#
+# Copy this file to config.yaml and modify for your environment.
+# See documentation for full configuration reference.
+# -------------------------------------------------------------------------------
+
+# --- Vault Connection ---
+vault:
+  address: https://vault.example.com:8200
+
+  # Authentication method (choose one)
+  auth:
+    # Token-based authentication
+    token:
+      value: s.xxxxxxxxxxxxxxxxxxxxx
+
+    # # AppRole authentication
+    # approle:
+    #   role_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    #   secret_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+    # # GCP authentication
+    # gcp:
+    #   role: my-gcp-role
+    #   service_account: my-sa@project.iam.gserviceaccount.com
+
+    # # TLS certificate authentication
+    # tls:
+    #   role: my-tls-role
+    #   client_cert: /path/to/client.crt
+    #   client_key: /path/to/client.key
+
+# --- Prometheus Metrics ---
+prometheus:
+  port: 9090
+  refresh_interval: 30s
+
+# --- Logging ---
+logging:
+  level: info    # debug, info, warn, error
+  format: json   # json, text
+
+# --- Certificate Definitions ---
+certificates:
+  - name: example-cert
+    role: pki/issue/my-role
+    common_name: example.mydomain.com
+    certificate: /etc/vault-cert-manager/certs/example.crt
+    key: /etc/vault-cert-manager/certs/example.key
+    chain: /etc/vault-cert-manager/certs/example-chain.crt
+    ttl: 720h
+    alt_names:
+      - www.example.mydomain.com
+      - api.example.mydomain.com
+    ip_sans:
+      - 10.0.0.1

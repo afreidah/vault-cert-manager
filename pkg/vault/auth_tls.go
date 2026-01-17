@@ -1,4 +1,15 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - TLS Certificate Authentication
+//
+// TLS certificate-based authentication for Vault. Configures mTLS transport
+// with client certificates and performs the cert auth login flow.
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -10,19 +21,31 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-// TLSAuthenticator implements TLS certificate-based authentication
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// TLSAuthenticator implements TLS certificate-based Vault authentication.
 type TLSAuthenticator struct {
 	config *config.TLSAuth
 }
 
-// NewTLSAuthenticator creates a new TLS authenticator
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// NewTLSAuthenticator creates a new TLS certificate authenticator.
 func NewTLSAuthenticator(config *config.TLSAuth) *TLSAuthenticator {
 	return &TLSAuthenticator{
 		config: config,
 	}
 }
 
-// Authenticate performs TLS certificate authentication with Vault
+// -------------------------------------------------------------------------
+// METHODS
+// -------------------------------------------------------------------------
+
+// Authenticate performs TLS certificate authentication with Vault.
 func (t *TLSAuthenticator) Authenticate(client *api.Client) error {
 	// Load the client certificate and key
 	cert, err := tls.LoadX509KeyPair(t.config.CertFile, t.config.KeyFile)

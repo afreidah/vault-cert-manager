@@ -1,4 +1,17 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Vault Client
+//
+// HashiCorp Vault client wrapper for PKI certificate issuance. Handles
+// client initialization, authentication, and certificate requests with
+// support for SANs, IP SANs, TTL, and certificate chain retrieval.
+// -------------------------------------------------------------------------------
+
+// Package vault provides HashiCorp Vault PKI client integration.
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -10,14 +23,25 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
+// -------------------------------------------------------------------------
+// INTERFACES
+// -------------------------------------------------------------------------
+
+// Client defines the interface for Vault PKI operations.
 type Client interface {
 	IssueCertificate(certConfig *config.CertificateConfig) (*CertificateData, error)
 }
 
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// VaultClient wraps the HashiCorp Vault API client.
 type VaultClient struct {
 	client *api.Client
 }
 
+// CertificateData holds the certificate response from Vault PKI.
 type CertificateData struct {
 	Certificate      string
 	PrivateKey       string
@@ -26,6 +50,11 @@ type CertificateData struct {
 	Expiration       time.Time
 }
 
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// NewClient creates a new authenticated Vault client.
 func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
 	cfg := &api.Config{
 		Address: vaultConfig.Address,
@@ -51,6 +80,11 @@ func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
 	}, nil
 }
 
+// -------------------------------------------------------------------------
+// METHODS
+// -------------------------------------------------------------------------
+
+// IssueCertificate requests a new certificate from Vault PKI.
 func (v *VaultClient) IssueCertificate(certConfig *config.CertificateConfig) (*CertificateData, error) {
 	path := fmt.Sprintf("pki/issue/%s", certConfig.Role)
 

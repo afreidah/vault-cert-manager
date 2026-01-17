@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Health Checker Tests
+//
+// Unit tests for TCP-based certificate health checking.
+// -------------------------------------------------------------------------------
+
 package health
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/cert"
@@ -7,6 +17,11 @@ import (
 	"time"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestNewTCPChecker verifies checker instance creation.
 func TestNewTCPChecker(t *testing.T) {
 	checker := NewTCPChecker()
 	if checker == nil {
@@ -14,6 +29,7 @@ func TestNewTCPChecker(t *testing.T) {
 	}
 }
 
+// TestTCPChecker_Check_NoHealthCheck verifies behavior with no health check config.
 func TestTCPChecker_Check_NoHealthCheck(t *testing.T) {
 	checker := NewTCPChecker()
 	managed := &cert.ManagedCertificate{
@@ -32,6 +48,7 @@ func TestTCPChecker_Check_NoHealthCheck(t *testing.T) {
 	}
 }
 
+// TestTCPChecker_Check_InvalidHost verifies error handling for invalid hosts.
 func TestTCPChecker_Check_InvalidHost(t *testing.T) {
 	checker := NewTCPChecker()
 	managed := &cert.ManagedCertificate{
@@ -58,6 +75,7 @@ func TestTCPChecker_Check_InvalidHost(t *testing.T) {
 	}
 }
 
+// TestTCPChecker_calculateFingerprint verifies fingerprint calculation.
 func TestTCPChecker_calculateFingerprint(t *testing.T) {
 	checker := NewTCPChecker()
 

@@ -1,0 +1,31 @@
+#!/bin/bash
+# -------------------------------------------------------------------------------
+# vault-cert-manager - Post-Install Script
+#
+# Project: Munchbox / Author: Alex Freidah
+#
+# Creates service user/group and configures systemd after package installation.
+# -------------------------------------------------------------------------------
+
+set -e
+
+# --- Create service user and group ---
+if ! getent group vault-cert-manager >/dev/null 2>&1; then
+    groupadd --system vault-cert-manager
+fi
+
+if ! getent passwd vault-cert-manager >/dev/null 2>&1; then
+    useradd --system \
+        --gid vault-cert-manager \
+        --home-dir /nonexistent \
+        --shell /usr/sbin/nologin \
+        --comment "Vault Certificate Manager" \
+        vault-cert-manager
+fi
+
+# --- Reload systemd and enable service ---
+systemctl daemon-reload
+
+echo "vault-cert-manager installed successfully."
+echo "Configure /etc/vault-cert-manager/config.yaml then run:"
+echo "  systemctl enable --now vault-cert-manager"

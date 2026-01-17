@@ -4,8 +4,10 @@
 *.dll
 *.so
 *.dylib
-cert-manager
-cert-manager-*
+
+# Build output directories
+bin/
+pkg/
 
 # Test binary, built with `go test -c`
 *.test
@@ -51,3 +53,4 @@ secrets.yaml
 # Temporary files
 tmp/
 temp/
+dist/

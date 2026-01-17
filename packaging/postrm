@@ -1,0 +1,27 @@
+#!/bin/bash
+# -------------------------------------------------------------------------------
+# vault-cert-manager - Post-Remove Script
+#
+# Project: Munchbox / Author: Alex Freidah
+#
+# Cleans up systemd after package removal. User/group and config are preserved
+# to allow reinstallation without losing configuration.
+# -------------------------------------------------------------------------------
+
+set -e
+
+# --- Reload systemd ---
+systemctl daemon-reload
+
+# --- Purge: remove user, group, and config directory ---
+if [ "$1" = "purge" ]; then
+    if getent passwd vault-cert-manager >/dev/null 2>&1; then
+        userdel vault-cert-manager || true
+    fi
+
+    if getent group vault-cert-manager >/dev/null 2>&1; then
+        groupdel vault-cert-manager || true
+    fi
+
+    rm -rf /etc/vault-cert-manager
+fi

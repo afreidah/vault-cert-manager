@@ -1,4 +1,15 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Mock Client
+//
+// Mock implementation of the Vault client interface for testing. Provides
+// gomock-based mocking and test certificate data generation.
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -10,25 +21,42 @@ import (
 
 //go:generate mockgen -source=client.go -destination=mock_client.go -package=vault
 
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// MockClient is a mock implementation of the Client interface.
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
 }
 
+// MockClientMockRecorder records method calls on MockClient.
 type MockClientMockRecorder struct {
 	mock *MockClient
 }
 
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// NewMockClient creates a new mock client for testing.
 func NewMockClient(ctrl *gomock.Controller) *MockClient {
 	mock := &MockClient{ctrl: ctrl}
 	mock.recorder = &MockClientMockRecorder{mock}
 	return mock
 }
 
+// -------------------------------------------------------------------------
+// METHODS
+// -------------------------------------------------------------------------
+
+// EXPECT returns the mock recorder for setting expectations.
 func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
+// IssueCertificate mocks the IssueCertificate method.
 func (m *MockClient) IssueCertificate(certConfig *config.CertificateConfig) (*CertificateData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IssueCertificate", certConfig)
@@ -37,11 +65,17 @@ func (m *MockClient) IssueCertificate(certConfig *config.CertificateConfig) (*Ce
 	return ret0, ret1
 }
 
+// IssueCertificate records a call to IssueCertificate.
 func (mr *MockClientMockRecorder) IssueCertificate(certConfig interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IssueCertificate", reflect.TypeOf((*MockClient)(nil).IssueCertificate), certConfig)
 }
 
+// -------------------------------------------------------------------------
+// TEST HELPERS
+// -------------------------------------------------------------------------
+
+// CreateTestCertificateData returns sample certificate data for testing.
 func CreateTestCertificateData() *CertificateData {
 	return &CertificateData{
 		Certificate: `-----BEGIN CERTIFICATE-----

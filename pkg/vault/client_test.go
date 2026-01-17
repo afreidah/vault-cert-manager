@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Vault Client Tests
+//
+// Unit tests for Vault client initialization and certificate issuance.
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -6,6 +16,11 @@ import (
 	"time"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestNewClient verifies Vault client creation with various auth methods.
 func TestNewClient(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -84,6 +99,7 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
+// TestCertificateDataValidation verifies certificate data structure.
 func TestCertificateDataValidation(t *testing.T) {
 	certData := &CertificateData{
 		Certificate:  "test-certificate",
