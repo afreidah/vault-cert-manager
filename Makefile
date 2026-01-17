@@ -8,7 +8,7 @@
 # lintian validation for package quality checks.
 # -------------------------------------------------------------------------------
 
-.PHONY: help build build-linux build-linux-arm64 test test-coverage test-integration \
+.PHONY: help build build-linux build-linux-arm64 test test-all test-coverage test-integration \
         lint clean deps install run generate-mocks fmt vet check build-all dev-build \
         build-deb build-deb-arm64 lint-deb
 
@@ -28,7 +28,7 @@ LDFLAGS = -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X
 BINARY = vault-cert-manager
 BINARY_PATH = ./cmd/vault-cert-manager
 BIN_DIR = ./bin
-PKG_DIR = ./pkg
+DEB_DIR = ./dist
 
 default: help
 
@@ -64,8 +64,12 @@ dev-build:
 
 # --- Test Targets ---
 
-# Run tests
+# Run tests (use test-all for integration tests)
 test:
+	$(GOTEST) -v -short ./...
+
+# Run all tests including integration tests
+test-all:
 	$(GOTEST) -v ./...
 
 # Run tests with coverage report
@@ -109,7 +113,7 @@ deps:
 
 # Clean build artifacts
 clean:
-	rm -rf $(BIN_DIR) $(PKG_DIR)
+	rm -rf $(BIN_DIR) $(DEB_DIR)
 	rm -f coverage.out coverage.html
 
 # Install binary to /usr/local/bin
@@ -130,28 +134,28 @@ version:
 
 # Build Debian package for amd64
 build-deb: build-linux
-	@mkdir -p $(PKG_DIR)
+	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-amd64 $(BIN_DIR)/$(BINARY)-linux
-	VERSION=$(VERSION) GOARCH=amd64 nfpm package --packager deb --target $(PKG_DIR)/
+	VERSION=$(VERSION) GOARCH=amd64 nfpm package --packager deb --target $(DEB_DIR)/
 	@rm -f $(BIN_DIR)/$(BINARY)-linux
 
 # Build Debian package for arm64
 build-deb-arm64: build-linux-arm64
-	@mkdir -p $(PKG_DIR)
+	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-arm64 $(BIN_DIR)/$(BINARY)-linux
-	VERSION=$(VERSION) GOARCH=arm64 nfpm package --packager deb --target $(PKG_DIR)/
+	VERSION=$(VERSION) GOARCH=arm64 nfpm package --packager deb --target $(DEB_DIR)/
 	@rm -f $(BIN_DIR)/$(BINARY)-linux
 
 # Lint Debian packages with lintian (uses Docker on macOS)
 lint-deb:
 ifeq ($(shell uname),Darwin)
-	@for deb in $(PKG_DIR)/*.deb; do \
+	@for deb in $(DEB_DIR)/*.deb; do \
 		echo "Linting $$deb (via Docker)..."; \
-		docker run --rm -v $(CURDIR)/$(PKG_DIR):/pkg debian:bookworm-slim \
+		docker run --rm -v $(CURDIR)/$(DEB_DIR):/pkg debian:bookworm-slim \
 			sh -c "apt-get update -qq && apt-get install -qq -y lintian >/dev/null 2>&1 && lintian --verbose /pkg/$$(basename $$deb)" || true; \
 	done
 else
-	@for deb in $(PKG_DIR)/*.deb; do \
+	@for deb in $(DEB_DIR)/*.deb; do \
 		echo "Linting $$deb..."; \
 		lintian --verbose $$deb || true; \
 	done

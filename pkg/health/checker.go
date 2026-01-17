@@ -44,7 +44,7 @@ func (t *TCPChecker) Check(managed *cert.ManagedCertificate) (*CheckResult, erro
 			Error:   fmt.Errorf("failed to connect to %s: %w", managed.Config.HealthCheck.TCP, err),
 		}, nil
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	tlsConn, err := tls.Dial("tcp", managed.Config.HealthCheck.TCP, &tls.Config{
 		InsecureSkipVerify: true,
@@ -55,7 +55,7 @@ func (t *TCPChecker) Check(managed *cert.ManagedCertificate) (*CheckResult, erro
 			Error:   fmt.Errorf("failed to establish TLS connection to %s: %w", managed.Config.HealthCheck.TCP, err),
 		}, nil
 	}
-	defer tlsConn.Close()
+	defer func() { _ = tlsConn.Close() }()
 
 	if err := tlsConn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		return &CheckResult{

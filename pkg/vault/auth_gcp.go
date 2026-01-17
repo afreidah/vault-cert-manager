@@ -90,7 +90,7 @@ func (g *GCPAuthenticator) getGCEJWT() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to retrieve GCE identity token: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -165,7 +165,7 @@ func (g *GCPAuthenticator) getIAMJWT() (string, error) {
 		PrivateKeyID: keyData.PrivateKeyID,
 		TokenURL:     keyData.TokenURI,
 		Audience:     "vault", // Vault expects this audience
-		Expires:      exp.Sub(time.Now()),
+		Expires:      time.Until(exp),
 	}
 
 	// Generate the token

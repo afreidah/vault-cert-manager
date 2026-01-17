@@ -237,7 +237,7 @@ func (m *Manager) writeFileWithPermissions(filename, content string, mode os.Fil
 }
 
 func (m *Manager) changeOwnership(filename, owner, group string) error {
-	var uid, gid int = -1, -1
+	uid, gid := -1, -1
 
 	if owner != "" {
 		if u, err := user.Lookup(owner); err == nil {

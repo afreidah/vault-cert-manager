@@ -53,3 +53,4 @@ secrets.yaml
 # Temporary files
 tmp/
 temp/
+dist/
