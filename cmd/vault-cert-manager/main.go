@@ -1,13 +1,12 @@
 // -------------------------------------------------------------------------------
 // vault-cert-manager - CLI Entry Point
 //
-// Project: Munchbox / Author: Alex Freidah
-//
 // Automated certificate lifecycle manager for HashiCorp Vault PKI. Issues,
 // renews, and deploys TLS certificates based on configurable policies with
 // Prometheus metrics and health checking.
 // -------------------------------------------------------------------------------
 
+// Package main provides the CLI entry point for vault-cert-manager.
 package main
 
 import (

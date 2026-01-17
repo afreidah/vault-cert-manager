@@ -1,4 +1,15 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - GCP Authentication
+//
+// GCP-based authentication for Vault supporting both GCE metadata-based
+// and IAM service account JWT authentication methods.
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -16,19 +27,31 @@ import (
 	"golang.org/x/oauth2/jwt"
 )
 
-// GCPAuthenticator implements GCP-based authentication
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// GCPAuthenticator implements GCP-based Vault authentication.
 type GCPAuthenticator struct {
 	config *config.GCPAuth
 }
 
-// NewGCPAuthenticator creates a new GCP authenticator
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// NewGCPAuthenticator creates a new GCP authenticator.
 func NewGCPAuthenticator(config *config.GCPAuth) *GCPAuthenticator {
 	return &GCPAuthenticator{
 		config: config,
 	}
 }
 
-// Authenticate performs GCP authentication with Vault
+// -------------------------------------------------------------------------
+// METHODS
+// -------------------------------------------------------------------------
+
+// Authenticate performs GCP authentication with Vault.
 func (g *GCPAuthenticator) Authenticate(client *api.Client) error {
 	var jwt string
 	var err error
@@ -72,7 +95,11 @@ func (g *GCPAuthenticator) Authenticate(client *api.Client) error {
 	return nil
 }
 
-// getGCEJWT retrieves a JWT from the GCE metadata service
+// -------------------------------------------------------------------------
+// PRIVATE METHODS
+// -------------------------------------------------------------------------
+
+// getGCEJWT retrieves a JWT from the GCE metadata service.
 func (g *GCPAuthenticator) getGCEJWT() (string, error) {
 	// GCE instances can get identity tokens directly from the metadata service
 	metadataURL := "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
@@ -105,7 +132,7 @@ func (g *GCPAuthenticator) getGCEJWT() (string, error) {
 	return string(token), nil
 }
 
-// getIAMJWT generates a JWT for IAM-based authentication
+// getIAMJWT generates a JWT for IAM-based authentication.
 func (g *GCPAuthenticator) getIAMJWT() (string, error) {
 	var creds []byte
 	var err error

@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Authenticator Tests
+//
+// Unit tests for Vault authentication factory and methods.
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -6,6 +16,11 @@ import (
 	"testing"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestCreateAuthenticator verifies authenticator factory logic.
 func TestCreateAuthenticator(t *testing.T) {
 	tests := []struct {
 		name       string

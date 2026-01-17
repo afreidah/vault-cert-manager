@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Application Tests
+//
+// Unit tests for the application lifecycle orchestration.
+// -------------------------------------------------------------------------------
+
 package app
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -6,6 +16,11 @@ import (
 	"time"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestNew verifies that a new App instance is created correctly.
 func TestNew(t *testing.T) {
 	cfg := &config.Config{
 		Vault: config.VaultConfig{
@@ -61,6 +76,7 @@ func TestNew(t *testing.T) {
 	app.Stop()
 }
 
+// TestApp_Stop verifies that the application shuts down cleanly.
 func TestApp_Stop(t *testing.T) {
 	cfg := &config.Config{
 		Vault: config.VaultConfig{

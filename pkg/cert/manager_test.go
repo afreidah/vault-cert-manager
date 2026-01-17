@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Certificate Manager Tests
+//
+// Unit tests for certificate lifecycle management operations.
+// -------------------------------------------------------------------------------
+
 package cert
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -12,6 +22,11 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestNewManager verifies that a new Manager instance is created correctly.
 func TestNewManager(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -28,6 +43,7 @@ func TestNewManager(t *testing.T) {
 	}
 }
 
+// TestManager_AddCertificate verifies certificate registration.
 func TestManager_AddCertificate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -68,6 +84,7 @@ func TestManager_AddCertificate(t *testing.T) {
 	}
 }
 
+// TestManager_ProcessCertificates verifies certificate issuance workflow.
 func TestManager_ProcessCertificates(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -107,6 +124,7 @@ func TestManager_ProcessCertificates(t *testing.T) {
 	}
 }
 
+// TestManager_ProcessCertificates_CombinedFile verifies combined cert/key file handling.
 func TestManager_ProcessCertificates_CombinedFile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -152,6 +170,7 @@ func TestManager_ProcessCertificates_CombinedFile(t *testing.T) {
 	}
 }
 
+// TestManager_ProcessCertificates_VaultError verifies error handling on Vault failures.
 func TestManager_ProcessCertificates_VaultError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

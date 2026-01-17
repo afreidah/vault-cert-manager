@@ -1,4 +1,17 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Configuration
+//
+// YAML configuration loading, merging, and validation. Supports single files
+// or directory-based configuration with automatic merging of certificate
+// definitions. Validates auth methods, certificates, logging, and metrics.
+// -------------------------------------------------------------------------------
+
+// Package config provides YAML configuration loading and validation.
 package config
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"fmt"
@@ -10,6 +23,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// Config represents the complete application configuration.
 type Config struct {
 	Vault        VaultConfig         `yaml:"vault"`
 	Prometheus   PrometheusConfig    `yaml:"prometheus"`
@@ -17,21 +35,25 @@ type Config struct {
 	Certificates []CertificateConfig `yaml:"certificates"`
 }
 
+// VaultConfig holds Vault server connection settings.
 type VaultConfig struct {
 	Address string     `yaml:"address"`
 	Auth    AuthConfig `yaml:"auth"`
 }
 
+// AuthConfig holds authentication method configuration.
 type AuthConfig struct {
 	Token *TokenAuth `yaml:"token,omitempty"`
 	GCP   *GCPAuth   `yaml:"gcp,omitempty"`
 	TLS   *TLSAuth   `yaml:"tls,omitempty"`
 }
 
+// TokenAuth holds token-based authentication settings.
 type TokenAuth struct {
 	Value string `yaml:"value"`
 }
 
+// GCPAuth holds GCP-based authentication settings.
 type GCPAuth struct {
 	MountPath       string `yaml:"mount_path,omitempty"`
 	Role            string `yaml:"role"`
@@ -41,6 +63,7 @@ type GCPAuth struct {
 	CredentialsFile string `yaml:"credentials_file,omitempty"`
 }
 
+// TLSAuth holds TLS certificate-based authentication settings.
 type TLSAuth struct {
 	MountPath string `yaml:"mount_path,omitempty"`
 	CertFile  string `yaml:"cert_file"`
@@ -48,16 +71,19 @@ type TLSAuth struct {
 	Name      string `yaml:"name,omitempty"`
 }
 
+// PrometheusConfig holds Prometheus metrics server settings.
 type PrometheusConfig struct {
 	Port            int           `yaml:"port"`
 	RefreshInterval time.Duration `yaml:"refresh_interval"`
 }
 
+// LoggingConfig holds logging output settings.
 type LoggingConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
 }
 
+// CertificateConfig holds settings for a managed certificate.
 type CertificateConfig struct {
 	Name        string        `yaml:"name"`
 	Role        string        `yaml:"role"`
@@ -73,11 +99,17 @@ type CertificateConfig struct {
 	Group       string        `yaml:"group,omitempty"`
 }
 
+// HealthCheck holds health check configuration for a certificate.
 type HealthCheck struct {
 	TCP     string        `yaml:"tcp,omitempty"`
 	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
+// -------------------------------------------------------------------------
+// PUBLIC FUNCTIONS
+// -------------------------------------------------------------------------
+
+// LoadConfig loads and validates configuration from a file or directory.
 func LoadConfig(path string) (*Config, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -116,6 +148,11 @@ func LoadConfig(path string) (*Config, error) {
 	return merged, nil
 }
 
+// -------------------------------------------------------------------------
+// PRIVATE FUNCTIONS
+// -------------------------------------------------------------------------
+
+// loadConfigFromFile reads and parses a single YAML config file.
 func loadConfigFromFile(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
@@ -130,6 +167,7 @@ func loadConfigFromFile(filename string) (*Config, error) {
 	return &config, nil
 }
 
+// loadConfigFromDirectory loads all YAML files from a directory.
 func loadConfigFromDirectory(dir string) ([]*Config, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -173,6 +211,7 @@ func loadConfigFromDirectory(dir string) ([]*Config, error) {
 	return configs, nil
 }
 
+// validateConfig validates the configuration and sets defaults.
 func validateConfig(config *Config) error {
 	if config.Vault.Address == "" {
 		return fmt.Errorf("vault.address is required")
@@ -247,6 +286,7 @@ func validateConfig(config *Config) error {
 	return nil
 }
 
+// validateAuthConfig validates the authentication configuration.
 func validateAuthConfig(auth *AuthConfig) error {
 	authMethods := 0
 
@@ -296,10 +336,16 @@ func validateAuthConfig(auth *AuthConfig) error {
 	return nil
 }
 
+// hasAuthConfig checks if any authentication method is configured.
 func hasAuthConfig(auth *AuthConfig) bool {
 	return auth.Token != nil || auth.GCP != nil || auth.TLS != nil
 }
 
+// -------------------------------------------------------------------------
+// METHODS
+// -------------------------------------------------------------------------
+
+// IsCombinedFile returns true if cert and key use the same file path.
 func (c *CertificateConfig) IsCombinedFile() bool {
 	return c.Certificate == c.Key
 }

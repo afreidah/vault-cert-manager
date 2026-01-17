@@ -1,4 +1,17 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Application Lifecycle
+//
+// Core application orchestration: initializes components, manages goroutines
+// for certificate processing and metrics collection, and handles graceful
+// shutdown coordination.
+// -------------------------------------------------------------------------------
+
+// Package app provides the main application lifecycle orchestration.
 package app
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/cert"
@@ -13,6 +26,11 @@ import (
 	"time"
 )
 
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// App orchestrates the certificate manager application lifecycle.
 type App struct {
 	config        *config.Config
 	certManager   *cert.Manager
@@ -23,6 +41,11 @@ type App struct {
 	wg            sync.WaitGroup
 }
 
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// New creates a new App instance with the given configuration.
 func New(cfg *config.Config) (*App, error) {
 	logging.SetupLogger(&cfg.Logging)
 
@@ -53,6 +76,11 @@ func New(cfg *config.Config) (*App, error) {
 	}, nil
 }
 
+// -------------------------------------------------------------------------
+// LIFECYCLE
+// -------------------------------------------------------------------------
+
+// Run starts the application and its background workers.
 func (a *App) Run() error {
 	slog.Info("Starting cert-manager application")
 
@@ -83,12 +111,18 @@ func (a *App) Run() error {
 	return nil
 }
 
+// Stop gracefully shuts down the application and waits for workers to finish.
 func (a *App) Stop() {
 	slog.Info("Stopping cert-manager application")
 	a.cancel()
 	a.wg.Wait()
 }
 
+// -------------------------------------------------------------------------
+// BACKGROUND WORKERS
+// -------------------------------------------------------------------------
+
+// runCertificateProcessor periodically checks and renews certificates.
 func (a *App) runCertificateProcessor() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
@@ -105,6 +139,7 @@ func (a *App) runCertificateProcessor() {
 	}
 }
 
+// runMetricsUpdater periodically updates Prometheus metrics.
 func (a *App) runMetricsUpdater() {
 	ticker := time.NewTicker(a.config.Prometheus.RefreshInterval)
 	defer ticker.Stop()

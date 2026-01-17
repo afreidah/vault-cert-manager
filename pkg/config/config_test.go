@@ -1,4 +1,14 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Configuration Tests
+//
+// Unit tests for YAML configuration loading and validation.
+// -------------------------------------------------------------------------------
+
 package config
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"os"
@@ -6,6 +16,11 @@ import (
 	"testing"
 )
 
+// -------------------------------------------------------------------------
+// TESTS
+// -------------------------------------------------------------------------
+
+// TestLoadConfig verifies configuration loading from YAML files.
 func TestLoadConfig(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -139,6 +154,7 @@ certificates:
 	}
 }
 
+// TestValidateConfig verifies configuration validation logic.
 func TestValidateConfig(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -229,6 +245,7 @@ func TestValidateConfig(t *testing.T) {
 	}
 }
 
+// TestCertificateConfig_IsCombinedFile verifies combined file detection.
 func TestCertificateConfig_IsCombinedFile(t *testing.T) {
 	tests := []struct {
 		name     string

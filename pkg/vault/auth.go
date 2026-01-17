@@ -1,4 +1,15 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Authenticator Interface
+//
+// Defines the Authenticator interface and factory function for creating
+// authentication handlers based on configuration (token, GCP, or TLS).
+// -------------------------------------------------------------------------------
+
 package vault
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -7,12 +18,20 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-// Authenticator interface defines methods for authenticating with Vault
+// -------------------------------------------------------------------------
+// INTERFACES
+// -------------------------------------------------------------------------
+
+// Authenticator defines the interface for Vault authentication methods.
 type Authenticator interface {
 	Authenticate(client *api.Client) error
 }
 
-// CreateAuthenticator creates the appropriate authenticator based on the auth configuration
+// -------------------------------------------------------------------------
+// PUBLIC FUNCTIONS
+// -------------------------------------------------------------------------
+
+// CreateAuthenticator creates an authenticator based on the auth configuration.
 func CreateAuthenticator(authConfig *config.AuthConfig) (Authenticator, error) {
 	if authConfig.Token != nil {
 		return NewTokenAuthenticator(authConfig.Token), nil

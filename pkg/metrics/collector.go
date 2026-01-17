@@ -1,4 +1,17 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Metrics Collector
+//
+// Prometheus metrics for certificate lifecycle monitoring. Exposes gauges for
+// certificate timestamps and fingerprints, counters for renewal operations,
+// and integrates with health checks for deployment verification.
+// -------------------------------------------------------------------------------
+
+// Package metrics provides Prometheus metrics for certificate monitoring.
 package metrics
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/cert"
@@ -11,6 +24,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// -------------------------------------------------------------------------
+// TYPES
+// -------------------------------------------------------------------------
+
+// Collector gathers and exposes certificate metrics for Prometheus.
 type Collector struct {
 	certManager   *cert.Manager
 	healthChecker health.Checker
@@ -25,6 +43,11 @@ type Collector struct {
 	renewalCounts map[string]map[string]int
 }
 
+// -------------------------------------------------------------------------
+// CONSTRUCTOR
+// -------------------------------------------------------------------------
+
+// NewCollector creates a new metrics collector with the given dependencies.
 func NewCollector(certManager *cert.Manager, healthChecker health.Checker) *Collector {
 	registry := prometheus.NewRegistry()
 
@@ -84,6 +107,11 @@ func NewCollector(certManager *cert.Manager, healthChecker health.Checker) *Coll
 	return c
 }
 
+// -------------------------------------------------------------------------
+// PUBLIC METHODS
+// -------------------------------------------------------------------------
+
+// StartServer starts the Prometheus HTTP metrics server.
 func (c *Collector) StartServer(port int) error {
 	http.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
 
@@ -93,6 +121,7 @@ func (c *Collector) StartServer(port int) error {
 	return http.ListenAndServe(addr, nil)
 }
 
+// UpdateMetrics refreshes all certificate and health check metrics.
 func (c *Collector) UpdateMetrics() {
 	managedCerts := c.certManager.GetManagedCertificates()
 
@@ -102,6 +131,11 @@ func (c *Collector) UpdateMetrics() {
 	}
 }
 
+// -------------------------------------------------------------------------
+// PRIVATE METHODS
+// -------------------------------------------------------------------------
+
+// updateCertificateMetrics updates metrics for a single certificate.
 func (c *Collector) updateCertificateMetrics(name string, managed *cert.ManagedCertificate) {
 	if !managed.LastRenewed.IsZero() {
 		c.lastRenewedTimestamp.WithLabelValues(name).Set(float64(managed.LastRenewed.Unix()))
@@ -117,6 +151,7 @@ func (c *Collector) updateCertificateMetrics(name string, managed *cert.ManagedC
 	}
 }
 
+// updateHealthCheckMetrics performs health check and updates fingerprint metrics.
 func (c *Collector) updateHealthCheckMetrics(name string, managed *cert.ManagedCertificate) {
 	if managed.Config.HealthCheck == nil {
 		return
@@ -138,6 +173,7 @@ func (c *Collector) updateHealthCheckMetrics(name string, managed *cert.ManagedC
 	}
 }
 
+// IncrementRenewalCounter increments the renewal counter for a certificate.
 func (c *Collector) IncrementRenewalCounter(name, status string) {
 	c.renewalsTotal.WithLabelValues(name, status).Inc()
 }

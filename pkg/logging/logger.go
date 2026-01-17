@@ -1,4 +1,16 @@
+// -------------------------------------------------------------------------------
+// vault-cert-manager - Logging
+//
+// Configures the global slog logger based on configuration settings.
+// Supports JSON and text output formats with configurable log levels.
+// -------------------------------------------------------------------------------
+
+// Package logging provides slog logger configuration.
 package logging
+
+// -------------------------------------------------------------------------
+// IMPORTS
+// -------------------------------------------------------------------------
 
 import (
 	"cert-manager/pkg/config"
@@ -7,6 +19,11 @@ import (
 	"strings"
 )
 
+// -------------------------------------------------------------------------
+// PUBLIC FUNCTIONS
+// -------------------------------------------------------------------------
+
+// SetupLogger configures the global slog logger based on the given config.
 func SetupLogger(cfg *config.LoggingConfig) {
 	var level slog.Level
 
