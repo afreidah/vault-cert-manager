@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"cert-manager/pkg/config"
+	"github.com/afreidah/vault-cert-manager/pkg/config"
 	"fmt"
 
 	"github.com/hashicorp/vault/api"

@@ -1,7 +1,7 @@
 package health
 
 import (
-	"cert-manager/pkg/cert"
+	"github.com/afreidah/vault-cert-manager/pkg/cert"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"

@@ -1,8 +1,8 @@
 package health
 
 import (
-	"cert-manager/pkg/cert"
-	"cert-manager/pkg/config"
+	"github.com/afreidah/vault-cert-manager/pkg/cert"
+	"github.com/afreidah/vault-cert-manager/pkg/config"
 	"testing"
 	"time"
 )

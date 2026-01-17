@@ -1,4 +1,4 @@
-module cert-manager
+module github.com/afreidah/vault-cert-manager
 
 go 1.25
 

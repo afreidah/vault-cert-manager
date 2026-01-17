@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"cert-manager/pkg/cert"
-	"cert-manager/pkg/health"
+	"github.com/afreidah/vault-cert-manager/pkg/cert"
+	"github.com/afreidah/vault-cert-manager/pkg/health"
 	"fmt"
 	"log/slog"
 	"net/http"

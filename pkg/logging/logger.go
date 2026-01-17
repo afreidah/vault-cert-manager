@@ -1,7 +1,7 @@
 package logging
 
 import (
-	"cert-manager/pkg/config"
+	"github.com/afreidah/vault-cert-manager/pkg/config"
 	"log/slog"
 	"os"
 	"strings"
