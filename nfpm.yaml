@@ -35,7 +35,7 @@ contents:
 
   # --- Systemd Unit ---
   - src: ./packaging/vault-cert-manager.service
-    dst: /lib/systemd/system/vault-cert-manager.service
+    dst: /usr/lib/systemd/system/vault-cert-manager.service
     file_info:
       mode: 0644
 
@@ -44,16 +44,13 @@ contents:
     type: dir
     file_info:
       mode: 0750
-      owner: vault-cert-manager
-      group: vault-cert-manager
 
-  # --- Example Config ---
+  # --- Example Config (marked as config file) ---
   - src: ./packaging/config.example.yaml
     dst: /etc/vault-cert-manager/config.example.yaml
+    type: config
     file_info:
       mode: 0640
-      owner: vault-cert-manager
-      group: vault-cert-manager
 
 # -------------------------------------------------------------------------
 # PACKAGE SCRIPTS

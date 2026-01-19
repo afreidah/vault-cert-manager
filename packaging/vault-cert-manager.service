@@ -1,10 +1,9 @@
 # -------------------------------------------------------------------------------
-# vault-cert-manager - Systemd Service Unit
+# Vault Cert Manager Systemd Service
 #
 # Project: Munchbox / Author: Alex Freidah
 #
-# Manages the vault-cert-manager daemon which handles automated certificate
-# lifecycle management with HashiCorp Vault PKI backend.
+# Systemd unit file for vault-cert-manager service.
 # -------------------------------------------------------------------------------
 
 [Unit]
@@ -15,26 +14,17 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=vault-cert-manager
-Group=vault-cert-manager
+User=root
+Group=root
 ExecStart=/usr/bin/vault-cert-manager --config /etc/vault-cert-manager/config.yaml
 Restart=on-failure
-RestartSec=5
+RestartSec=10
 
-# --- Security Hardening ---
-NoNewPrivileges=yes
-ProtectSystem=strict
-ProtectHome=yes
-PrivateTmp=yes
-PrivateDevices=yes
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
-ReadWritePaths=/etc/vault-cert-manager
-
-# --- Resource Limits ---
-LimitNOFILE=65536
-TimeoutStopSec=30
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=true
+ProtectHome=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

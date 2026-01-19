@@ -37,15 +37,17 @@ type Config struct {
 
 // VaultConfig holds Vault server connection settings.
 type VaultConfig struct {
-	Address string     `yaml:"address"`
-	Auth    AuthConfig `yaml:"auth"`
+	Address  string     `yaml:"address"`
+	PKIMount string     `yaml:"pki_mount,omitempty"`
+	Auth     AuthConfig `yaml:"auth"`
 }
 
 // AuthConfig holds authentication method configuration.
 type AuthConfig struct {
-	Token *TokenAuth `yaml:"token,omitempty"`
-	GCP   *GCPAuth   `yaml:"gcp,omitempty"`
-	TLS   *TLSAuth   `yaml:"tls,omitempty"`
+	Token   *TokenAuth   `yaml:"token,omitempty"`
+	GCP     *GCPAuth     `yaml:"gcp,omitempty"`
+	TLS     *TLSAuth     `yaml:"tls,omitempty"`
+	AppRole *AppRoleAuth `yaml:"approle,omitempty"`
 }
 
 // TokenAuth holds token-based authentication settings.
@@ -69,6 +71,14 @@ type TLSAuth struct {
 	CertFile  string `yaml:"cert_file"`
 	KeyFile   string `yaml:"key_file"`
 	Name      string `yaml:"name,omitempty"`
+}
+
+// AppRoleAuth holds AppRole-based authentication settings.
+type AppRoleAuth struct {
+	MountPath    string `yaml:"mount_path,omitempty"`
+	RoleID       string `yaml:"role_id"`
+	SecretID     string `yaml:"secret_id,omitempty"`
+	SecretIDFile string `yaml:"secret_id_file,omitempty"`
 }
 
 // PrometheusConfig holds Prometheus metrics server settings.
@@ -326,8 +336,21 @@ func validateAuthConfig(auth *AuthConfig) error {
 		}
 	}
 
+	if auth.AppRole != nil {
+		authMethods++
+		if auth.AppRole.RoleID == "" {
+			return fmt.Errorf("approle.role_id is required")
+		}
+		if auth.AppRole.SecretID == "" && auth.AppRole.SecretIDFile == "" {
+			return fmt.Errorf("approle.secret_id or approle.secret_id_file is required")
+		}
+		if auth.AppRole.MountPath == "" {
+			auth.AppRole.MountPath = "approle"
+		}
+	}
+
 	if authMethods == 0 {
-		return fmt.Errorf("exactly one authentication method must be specified (token, gcp, or tls)")
+		return fmt.Errorf("exactly one authentication method must be specified (token, gcp, tls, or approle)")
 	}
 	if authMethods > 1 {
 		return fmt.Errorf("only one authentication method can be specified, found %d", authMethods)
@@ -338,7 +361,7 @@ func validateAuthConfig(auth *AuthConfig) error {
 
 // hasAuthConfig checks if any authentication method is configured.
 func hasAuthConfig(auth *AuthConfig) bool {
-	return auth.Token != nil || auth.GCP != nil || auth.TLS != nil
+	return auth.Token != nil || auth.GCP != nil || auth.TLS != nil || auth.AppRole != nil
 }
 
 // -------------------------------------------------------------------------

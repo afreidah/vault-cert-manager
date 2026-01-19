@@ -14,11 +14,12 @@ package vault
 // -------------------------------------------------------------------------
 
 import (
-	"cert-manager/pkg/config"
 	"fmt"
 	"net"
 	"strings"
 	"time"
+
+	"cert-manager/pkg/config"
 
 	"github.com/hashicorp/vault/api"
 )
@@ -38,7 +39,8 @@ type Client interface {
 
 // VaultClient wraps the HashiCorp Vault API client.
 type VaultClient struct {
-	client *api.Client
+	client   *api.Client
+	pkiMount string
 }
 
 // CertificateData holds the certificate response from Vault PKI.
@@ -75,8 +77,14 @@ func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
 		return nil, fmt.Errorf("failed to authenticate with vault: %w", err)
 	}
 
+	pkiMount := vaultConfig.PKIMount
+	if pkiMount == "" {
+		pkiMount = "pki"
+	}
+
 	return &VaultClient{
-		client: client,
+		client:   client,
+		pkiMount: pkiMount,
 	}, nil
 }
 
@@ -86,7 +94,7 @@ func NewClient(vaultConfig *config.VaultConfig) (*VaultClient, error) {
 
 // IssueCertificate requests a new certificate from Vault PKI.
 func (v *VaultClient) IssueCertificate(certConfig *config.CertificateConfig) (*CertificateData, error) {
-	path := fmt.Sprintf("pki/issue/%s", certConfig.Role)
+	path := fmt.Sprintf("%s/issue/%s", v.pkiMount, certConfig.Role)
 
 	data := map[string]interface{}{
 		"common_name": certConfig.CommonName,

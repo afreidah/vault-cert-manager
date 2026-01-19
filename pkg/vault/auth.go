@@ -45,5 +45,9 @@ func CreateAuthenticator(authConfig *config.AuthConfig) (Authenticator, error) {
 		return NewTLSAuthenticator(authConfig.TLS), nil
 	}
 
+	if authConfig.AppRole != nil {
+		return NewAppRoleAuthenticator(authConfig.AppRole), nil
+	}
+
 	return nil, fmt.Errorf("no valid authentication method found")
 }

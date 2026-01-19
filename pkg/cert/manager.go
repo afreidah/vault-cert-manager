@@ -118,6 +118,32 @@ func (m *Manager) ProcessCertificates() error {
 	return nil
 }
 
+// ForceRotateAll forces immediate renewal of all managed certificates.
+func (m *Manager) ForceRotateAll() error {
+	slog.Info("Force rotating all certificates")
+	for name, managed := range m.certificates {
+		slog.Info("Force rotating certificate", "certificate", name)
+		if err := m.issueCertificate(managed); err != nil {
+			slog.Error("Failed to rotate certificate",
+				"certificate", name,
+				"error", err)
+			continue
+		}
+	}
+	return nil
+}
+
+// ForceRotate forces immediate renewal of a specific certificate.
+func (m *Manager) ForceRotate(name string) error {
+	managed, exists := m.certificates[name]
+	if !exists {
+		return fmt.Errorf("certificate %s not found", name)
+	}
+
+	slog.Info("Force rotating certificate", "certificate", name)
+	return m.issueCertificate(managed)
+}
+
 // GetManagedCertificates returns all certificates under management.
 func (m *Manager) GetManagedCertificates() map[string]*ManagedCertificate {
 	return m.certificates

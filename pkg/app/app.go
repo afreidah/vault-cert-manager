@@ -118,6 +118,17 @@ func (a *App) Stop() {
 	a.wg.Wait()
 }
 
+// ForceRotate triggers immediate rotation of all certificates.
+func (a *App) ForceRotate() error {
+	return a.certManager.ForceRotateAll()
+}
+
+// RunOnce processes certificates once and returns (for --rotate mode).
+func (a *App) RunOnce() error {
+	slog.Info("Running one-time certificate rotation")
+	return a.certManager.ForceRotateAll()
+}
+
 // -------------------------------------------------------------------------
 // BACKGROUND WORKERS
 // -------------------------------------------------------------------------

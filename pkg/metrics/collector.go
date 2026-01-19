@@ -16,6 +16,7 @@ package metrics
 import (
 	"cert-manager/pkg/cert"
 	"cert-manager/pkg/health"
+	"cert-manager/pkg/web"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -111,14 +112,21 @@ func NewCollector(certManager *cert.Manager, healthChecker health.Checker) *Coll
 // PUBLIC METHODS
 // -------------------------------------------------------------------------
 
-// StartServer starts the Prometheus HTTP metrics server.
+// StartServer starts the HTTP server with Prometheus metrics and web dashboard.
 func (c *Collector) StartServer(port int) error {
-	http.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
+	mux := http.NewServeMux()
+
+	// Prometheus metrics endpoint
+	mux.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
+
+	// Web dashboard
+	dashboard := web.NewDashboard(c.certManager)
+	dashboard.RegisterHandlers(mux)
 
 	addr := fmt.Sprintf(":%d", port)
-	slog.Info("Starting Prometheus metrics server", "address", addr)
+	slog.Info("Starting HTTP server", "address", addr, "endpoints", []string{"/", "/metrics", "/api/status", "/api/rotate/*"})
 
-	return http.ListenAndServe(addr, nil)
+	return http.ListenAndServe(addr, mux)
 }
 
 // UpdateMetrics refreshes all certificate and health check metrics.

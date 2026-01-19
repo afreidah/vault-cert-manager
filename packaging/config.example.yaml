@@ -1,59 +1,46 @@
 # -------------------------------------------------------------------------------
-# vault-cert-manager - Example Configuration
+# Vault Cert Manager Configuration Example
 #
 # Project: Munchbox / Author: Alex Freidah
 #
-# Copy this file to config.yaml and modify for your environment.
-# See documentation for full configuration reference.
+# Copy to /etc/vault-cert-manager/config.yaml and customize for your environment.
 # -------------------------------------------------------------------------------
 
-# --- Vault Connection ---
 vault:
   address: https://vault.example.com:8200
-
-  # Authentication method (choose one)
   auth:
-    # Token-based authentication
-    token:
-      value: s.xxxxxxxxxxxxxxxxxxxxx
+    # Choose one authentication method:
+    
+    # AppRole (recommended for services)
+    approle:
+      role_id: "your-role-id"
+      secret_id_file: /etc/vault-cert-manager/secret_id
+      # mount_path: approle  # optional, defaults to "approle"
+    
+    # Or use a token (less secure, tokens expire)
+    # token:
+    #   value: "hvs.your-token"
 
-    # # AppRole authentication
-    # approle:
-    #   role_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    #   secret_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-    # # GCP authentication
-    # gcp:
-    #   role: my-gcp-role
-    #   service_account: my-sa@project.iam.gserviceaccount.com
-
-    # # TLS certificate authentication
-    # tls:
-    #   role: my-tls-role
-    #   client_cert: /path/to/client.crt
-    #   client_key: /path/to/client.key
-
-# --- Prometheus Metrics ---
 prometheus:
-  port: 9090
+  port: 9100
   refresh_interval: 30s
 
-# --- Logging ---
 logging:
-  level: info    # debug, info, warn, error
-  format: json   # json, text
+  level: info
+  format: text
 
-# --- Certificate Definitions ---
 certificates:
   - name: example-cert
-    role: pki/issue/my-role
-    common_name: example.mydomain.com
-    certificate: /etc/vault-cert-manager/certs/example.crt
-    key: /etc/vault-cert-manager/certs/example.key
-    chain: /etc/vault-cert-manager/certs/example-chain.crt
+    role: your-pki-role
+    common_name: service.example.com
+    certificate: /etc/ssl/service.crt
+    key: /etc/ssl/service.key
     ttl: 720h
     alt_names:
-      - www.example.mydomain.com
-      - api.example.mydomain.com
+      - localhost
+      - service.internal
     ip_sans:
-      - 10.0.0.1
+      - 127.0.0.1
+    owner: root
+    group: root
+    on_change: "systemctl reload your-service"

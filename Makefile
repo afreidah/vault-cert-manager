@@ -16,6 +16,8 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+# Debian-compliant version (must start with digit)
+DEB_VERSION ?= $(shell v="$(VERSION)"; if echo "$$v" | grep -qE '^[0-9]'; then echo "$$v"; else echo "0.0.0+$$v"; fi)
 
 # --- Go toolchain ---
 GOCMD = go
@@ -136,14 +138,14 @@ version:
 build-deb: build-linux
 	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-amd64 $(BIN_DIR)/$(BINARY)-linux
-	VERSION=$(VERSION) GOARCH=amd64 nfpm package --packager deb --target $(DEB_DIR)/
+	VERSION=$(DEB_VERSION) GOARCH=amd64 nfpm package --packager deb --target $(DEB_DIR)/
 	@rm -f $(BIN_DIR)/$(BINARY)-linux
 
 # Build Debian package for arm64
 build-deb-arm64: build-linux-arm64
 	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-arm64 $(BIN_DIR)/$(BINARY)-linux
-	VERSION=$(VERSION) GOARCH=arm64 nfpm package --packager deb --target $(DEB_DIR)/
+	VERSION=$(DEB_VERSION) GOARCH=arm64 nfpm package --packager deb --target $(DEB_DIR)/
 	@rm -f $(BIN_DIR)/$(BINARY)-linux
 
 # Lint Debian packages with lintian (uses Docker on macOS)
