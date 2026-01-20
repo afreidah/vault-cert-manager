@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Manager - All Nodes</title>
+    <style>
+        :root {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #313244;
+            --bg-tertiary: #45475a;
+            --text-primary: #cdd6f4;
+            --text-secondary: #a6adc8;
+            --green: #a6e3a1;
+            --yellow: #f9e2af;
+            --red: #f38ba8;
+            --blue: #89b4fa;
+            --mauve: #cba6f7;
+            --peach: #fab387;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+        h1 { font-size: 1.5rem; font-weight: 600; }
+        h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; }
+        .stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+        }
+        .stat { display: flex; align-items: center; gap: 0.5rem; }
+        .stat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--blue); color: var(--bg-primary); }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .nodes-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .node-card {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
+        }
+        .node-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .node-name h2 { margin: 0; }
+        .node-address {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        .node-error {
+            padding: 1rem 1.25rem;
+            color: var(--red);
+            font-size: 0.875rem;
+        }
+        .certs-list {
+            padding: 0.5rem 0;
+        }
+        .cert-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--bg-primary);
+        }
+        .cert-row:last-child { border-bottom: none; }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .status-healthy { background: var(--green); }
+        .status-expiring { background: var(--yellow); }
+        .status-critical { background: var(--red); animation: pulse 2s infinite; }
+        .status-unknown { background: var(--bg-tertiary); }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .cert-name { font-weight: 500; }
+        .cert-cn {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .cert-expiry {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+        .days-left {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .days-left.healthy { color: var(--green); }
+        .days-left.expiring { color: var(--yellow); }
+        .days-left.critical { color: var(--red); }
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--green); }
+        .toast.error { border-color: var(--red); }
+        .summary-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .refresh-btn {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Certificate Manager</h1>
+            <button class="btn btn-secondary refresh-btn" onclick="refresh()">
+                <svg id="refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                Refresh
+            </button>
+        </header>
+
+        <div class="summary-bar" id="summary">
+            <!-- Filled by JS -->
+        </div>
+
+        <div class="nodes-grid" id="nodes">
+            {{range $node := .Nodes}}
+            <div class="node-card" data-node="{{$node.Node}}">
+                <div class="node-header">
+                    <div class="node-name">
+                        <h2>{{$node.Node}}</h2>
+                        <span class="node-address">{{$node.Address}}</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="rotateNode('{{$node.Node}}')">Rotate All</button>
+                </div>
+                {{if $node.Error}}
+                <div class="node-error">Error: {{$node.Error}}</div>
+                {{else}}
+                <div class="certs-list">
+                    {{range $node.Certs}}
+                    <div class="cert-row">
+                        <div class="status-indicator status-{{.Status}}"></div>
+                        <div>
+                            <div class="cert-name">{{.Name}}</div>
+                            <div class="cert-cn">{{.CommonName}}</div>
+                        </div>
+                        <div class="cert-expiry">{{formatTime .NotAfter}}</div>
+                        <div class="days-left {{.Status}}">{{.DaysLeft}}d</div>
+                        <button class="btn btn-secondary btn-sm" onclick="rotateCert('{{$node.Node}}', '{{.Name}}')">Rotate</button>
+                    </div>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <p style="color: var(--text-secondary);">No vault-cert-manager instances found in Consul.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Calculate and show summary stats
+        function updateSummary() {
+            const nodes = document.querySelectorAll('.node-card');
+            let totalCerts = 0, healthy = 0, expiring = 0, critical = 0, errors = 0;
+
+            nodes.forEach(node => {
+                if (node.querySelector('.node-error')) {
+                    errors++;
+                } else {
+                    node.querySelectorAll('.cert-row').forEach(cert => {
+                        totalCerts++;
+                        const indicator = cert.querySelector('.status-indicator');
+                        if (indicator.classList.contains('status-healthy')) healthy++;
+                        else if (indicator.classList.contains('status-expiring')) expiring++;
+                        else if (indicator.classList.contains('status-critical')) critical++;
+                    });
+                }
+            });
+
+            document.getElementById('summary').innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-value">${nodes.length}</div>
+                    <div class="summary-label">Nodes</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">${totalCerts}</div>
+                    <div class="summary-label">Certificates</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" style="color: var(--green)">${healthy}</div>
+                    <div class="summary-label">Healthy</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" style="color: var(--yellow)">${expiring}</div>
+                    <div class="summary-label">Expiring</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" style="color: var(--red)">${critical}</div>
+                    <div class="summary-label">Critical</div>
+                </div>
+                ${errors > 0 ? `<div class="summary-item">
+                    <div class="summary-value" style="color: var(--peach)">${errors}</div>
+                    <div class="summary-label">Errors</div>
+                </div>` : ''}
+            `;
+        }
+        updateSummary();
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function refresh() {
+            document.getElementById('refresh-icon').classList.add('spin');
+            location.reload();
+        }
+
+        async function rotateNode(node) {
+            if (!confirm('Rotate all certificates on ' + node + '?')) return;
+            try {
+                const res = await fetch('/api/rotate/' + node + '/all', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('All certificates on ' + node + ' rotated');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error || 'Rotation failed', 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            }
+        }
+
+        async function rotateCert(node, cert) {
+            if (!confirm('Rotate ' + cert + ' on ' + node + '?')) return;
+            try {
+                const res = await fetch('/api/rotate/' + node + '/' + cert, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(cert + ' rotated on ' + node);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error || 'Rotation failed', 'error');
+                }
+            } catch (e) {
+                showToast('Request failed: ' + e.message, 'error');
+            }
+        }
+
+        // Auto-refresh every 60 seconds
+        setTimeout(() => location.reload(), 60000);
+    </script>
+</body>
+</html>
