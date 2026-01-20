@@ -14,16 +14,17 @@ package app
 // -------------------------------------------------------------------------
 
 import (
+	"context"
+	"log/slog"
+	"sync"
+	"time"
+
 	"cert-manager/pkg/cert"
 	"cert-manager/pkg/config"
 	"cert-manager/pkg/health"
 	"cert-manager/pkg/logging"
 	"cert-manager/pkg/metrics"
 	"cert-manager/pkg/vault"
-	"context"
-	"log/slog"
-	"sync"
-	"time"
 )
 
 // -------------------------------------------------------------------------
@@ -84,29 +85,19 @@ func New(cfg *config.Config) (*App, error) {
 func (a *App) Run() error {
 	slog.Info("Starting cert-manager application")
 
-	if err := a.certManager.ProcessCertificates(); err != nil {
-		slog.Error("Error processing certificates", "error", err)
-	}
-
-	a.wg.Add(1)
-	go func() {
-		defer a.wg.Done()
+	a.wg.Go(func() {
 		if err := a.collector.StartServer(a.config.Prometheus.Port); err != nil {
 			slog.Error("Metrics server error", "error", err)
 		}
-	}()
+	})
 
-	a.wg.Add(1)
-	go func() {
-		defer a.wg.Done()
+	a.wg.Go(func() {
 		a.runCertificateProcessor()
-	}()
+	})
 
-	a.wg.Add(1)
-	go func() {
-		defer a.wg.Done()
+	a.wg.Go(func() {
 		a.runMetricsUpdater()
-	}()
+	})
 
 	return nil
 }
