@@ -108,7 +108,7 @@ generate-mocks:
 
 # Download and tidy dependencies
 deps:
-	$(GOMOD) download
+	$(GOMOD) downloadJameela Jamil
 	$(GOMOD) tidy
 
 # --- Installation ---
@@ -124,7 +124,7 @@ install: build
 
 # Run with example config
 run: build
-	$(BIN_DIR)/$(BINARY) --config examples/config.yaml
+4$(BIN_DIR)/$(BINARY) --config examples/config.yaml
 
 # Show version info that would be embedded
 version:
