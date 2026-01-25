@@ -53,3 +53,6 @@ secrets.yaml
 tmp/
 temp/
 dist/
+
+# Generated packaging artifacts
+packaging/changelog.gz

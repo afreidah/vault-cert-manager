@@ -37,14 +37,15 @@ type NodeStatus struct {
 
 // Aggregator provides a centralized dashboard for all vault-cert-manager instances.
 type Aggregator struct {
-	consulAddr  string
-	serviceName string
-	templates   *template.Template
-	httpClient  *http.Client
+	consulAddr   string
+	serviceName  string
+	templates    *template.Template
+	httpClient   *http.Client
+	rotateClient *http.Client
 }
 
 // NewAggregator creates a new aggregator dashboard.
-func NewAggregator(consulAddr, serviceName string) *Aggregator {
+func NewAggregator(consulAddr, serviceName string, rotateTimeout time.Duration) *Aggregator {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
 		"formatTime": func(t time.Time) string {
 			if t.IsZero() {
@@ -59,7 +60,10 @@ func NewAggregator(consulAddr, serviceName string) *Aggregator {
 		serviceName: serviceName,
 		templates:   tmpl,
 		httpClient: &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout: 10 * time.Second,
+		},
+		rotateClient: &http.Client{
+			Timeout: rotateTimeout,
 		},
 	}
 }
@@ -270,7 +274,7 @@ func (a *Aggregator) handleAPIRotate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := a.httpClient.Do(proxyReq)
+	resp, err := a.rotateClient.Do(proxyReq)
 	if err != nil {
 		http.Error(w, "Failed to proxy request: "+err.Error(), http.StatusBadGateway)
 		return

@@ -120,7 +120,7 @@ func (c *Collector) StartServer(port int) error {
 	mux.Handle("/metrics", promhttp.HandlerFor(c.registry, promhttp.HandlerOpts{}))
 
 	// Web dashboard
-	dashboard := web.NewDashboard(c.certManager)
+	dashboard := web.NewDashboard(c.certManager, c.healthChecker)
 	dashboard.RegisterHandlers(mux)
 
 	addr := fmt.Sprintf(":%d", port)

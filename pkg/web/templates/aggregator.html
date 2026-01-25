@@ -136,6 +136,22 @@
         .days-left.healthy { color: var(--green); }
         .days-left.expiring { color: var(--yellow); }
         .days-left.critical { color: var(--red); }
+        .out-of-sync-badge {
+            background: var(--mauve);
+            color: var(--bg-primary);
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .cert-row.out-of-sync {
+            background: rgba(203, 166, 247, 0.1);
+        }
+        .btn-warning {
+            background: var(--mauve);
+            color: var(--bg-primary);
+        }
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -215,15 +231,15 @@
                 {{else}}
                 <div class="certs-list">
                     {{range $node.Certs}}
-                    <div class="cert-row">
+                    <div class="cert-row{{if .OutOfSync}} out-of-sync{{end}}">
                         <div class="status-indicator status-{{.Status}}"></div>
                         <div>
-                            <div class="cert-name">{{.Name}}</div>
+                            <div class="cert-name">{{.Name}}{{if .OutOfSync}}<span class="out-of-sync-badge">OUT OF SYNC</span>{{end}}</div>
                             <div class="cert-cn">{{.CommonName}}</div>
                         </div>
                         <div class="cert-expiry">{{formatTime .NotAfter}}</div>
                         <div class="days-left {{.Status}}">{{.DaysLeft}}d</div>
-                        <button class="btn btn-secondary btn-sm" onclick="rotateCert('{{$node.Node}}', '{{.Name}}')">Rotate</button>
+                        <button class="btn {{if .OutOfSync}}btn-warning{{else}}btn-secondary{{end}} btn-sm" onclick="rotateCert('{{$node.Node}}', '{{.Name}}')">{{if .OutOfSync}}Sync{{else}}Rotate{{end}}</button>
                     </div>
                     {{end}}
                 </div>
@@ -241,7 +257,7 @@
         // Calculate and show summary stats
         function updateSummary() {
             const nodes = document.querySelectorAll('.node-card');
-            let totalCerts = 0, healthy = 0, expiring = 0, critical = 0, errors = 0;
+            let totalCerts = 0, healthy = 0, expiring = 0, critical = 0, errors = 0, outOfSync = 0;
 
             nodes.forEach(node => {
                 if (node.querySelector('.node-error')) {
@@ -253,6 +269,7 @@
                         if (indicator.classList.contains('status-healthy')) healthy++;
                         else if (indicator.classList.contains('status-expiring')) expiring++;
                         else if (indicator.classList.contains('status-critical')) critical++;
+                        if (cert.classList.contains('out-of-sync')) outOfSync++;
                     });
                 }
             });
@@ -278,6 +295,10 @@
                     <div class="summary-value" style="color: var(--red)">${critical}</div>
                     <div class="summary-label">Critical</div>
                 </div>
+                ${outOfSync > 0 ? `<div class="summary-item">
+                    <div class="summary-value" style="color: var(--mauve)">${outOfSync}</div>
+                    <div class="summary-label">Out of Sync</div>
+                </div>` : ''}
                 ${errors > 0 ? `<div class="summary-item">
                     <div class="summary-value" style="color: var(--peach)">${errors}</div>
                     <div class="summary-label">Errors</div>
@@ -302,12 +323,17 @@
             if (!confirm('Rotate all certificates on ' + node + '?')) return;
             try {
                 const res = await fetch('/api/rotate/' + node + '/all', { method: 'POST' });
-                const data = await res.json();
+                const text = await res.text();
                 if (res.ok) {
                     showToast('All certificates on ' + node + ' rotated');
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showToast(data.error || 'Rotation failed', 'error');
+                    try {
+                        const data = JSON.parse(text);
+                        showToast(data.error || 'Rotation failed', 'error');
+                    } catch {
+                        showToast(text || 'Rotation failed', 'error');
+                    }
                 }
             } catch (e) {
                 showToast('Request failed: ' + e.message, 'error');
@@ -318,12 +344,17 @@
             if (!confirm('Rotate ' + cert + ' on ' + node + '?')) return;
             try {
                 const res = await fetch('/api/rotate/' + node + '/' + cert, { method: 'POST' });
-                const data = await res.json();
+                const text = await res.text();
                 if (res.ok) {
                     showToast(cert + ' rotated on ' + node);
                     setTimeout(() => location.reload(), 1500);
                 } else {
-                    showToast(data.error || 'Rotation failed', 'error');
+                    try {
+                        const data = JSON.parse(text);
+                        showToast(data.error || 'Rotation failed', 'error');
+                    } catch {
+                        showToast(text || 'Rotation failed', 'error');
+                    }
                 }
             } catch (e) {
                 showToast('Request failed: ' + e.message, 'error');

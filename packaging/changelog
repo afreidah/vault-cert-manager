@@ -1,0 +1,20 @@
+vault-cert-manager (0.1.0-1) unstable; urgency=medium
+
+  * Add out-of-sync certificate detection to dashboards
+  * Display certificates where disk fingerprint differs from memory
+  * Show "OUT OF SYNC" badge and "Sync Now" button in UI
+  * Add out-of-sync count to aggregator summary bar
+  * Update API response with memory_fingerprint and out_of_sync fields
+
+ -- Alex Freidah <alex.freidah@gmail.com>  Sat, 24 Jan 2026 17:10:00 -0800
+
+vault-cert-manager (0.0.1-1) unstable; urgency=medium
+
+  * Initial release
+  * Automated certificate lifecycle management from Vault PKI
+  * Web dashboard with manual rotation buttons
+  * Aggregator mode for centralized multi-node view
+  * Prometheus metrics endpoint
+  * Health checks for certificate deployment validation
+
+ -- Alex Freidah <alex.freidah@gmail.com>  Fri, 17 Jan 2026 12:00:00 -0800

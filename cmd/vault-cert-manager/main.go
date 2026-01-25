@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"cert-manager/pkg/app"
 	"cert-manager/pkg/config"
@@ -46,6 +47,7 @@ func main() {
 	var consulAddr string
 	var serviceName string
 	var aggregatorPort int
+	var rotateTimeout int
 
 	pflag.StringVarP(&configPath, "config", "c", "", "Path to config file or directory")
 	pflag.BoolVarP(&showVersion, "version", "v", false, "Show version information")
@@ -54,6 +56,7 @@ func main() {
 	pflag.StringVar(&consulAddr, "consul-addr", "http://localhost:8500", "Consul HTTP address for service discovery")
 	pflag.StringVar(&serviceName, "service-name", "vault-cert-manager", "Consul service name to discover")
 	pflag.IntVarP(&aggregatorPort, "port", "p", 9102, "Port for aggregator dashboard")
+	pflag.IntVar(&rotateTimeout, "timeout", 120, "Timeout in seconds for rotate operations (aggregator mode)")
 	pflag.Parse()
 
 	if showVersion {
@@ -69,8 +72,9 @@ func main() {
 			"consul", consulAddr,
 			"service", serviceName,
 			"port", aggregatorPort,
+			"timeout", rotateTimeout,
 		)
-		aggregator := web.NewAggregator(consulAddr, serviceName)
+		aggregator := web.NewAggregator(consulAddr, serviceName, time.Duration(rotateTimeout)*time.Second)
 		if err := aggregator.StartServer(aggregatorPort); err != nil {
 			slog.Error("Aggregator server failed", "error", err)
 			os.Exit(1)

@@ -35,6 +35,7 @@ open http://localhost:9101/
 - **Automated Certificate Management**: Issues missing certificates, renews before expiration with jitter
 - **Web Dashboard**: Per-node web UI showing certificate status with manual rotation buttons
 - **Aggregator Mode**: Centralized dashboard discovering all instances via Consul service discovery
+- **Out-of-Sync Detection**: Identifies certificates where disk differs from what services are serving
 - **Force Rotation**: Trigger immediate rotation via SIGHUP, CLI flag, or REST API
 - **Health Checks**: TCP-based validation comparing disk vs in-memory certificates
 - **Prometheus Metrics**: Comprehensive metrics for monitoring certificate lifecycle
@@ -87,6 +88,21 @@ The aggregator:
 - Queries Consul for all registered vault-cert-manager services
 - Displays certificate status from all nodes in a unified view
 - Proxies rotation requests to individual nodes
+
+### Out-of-Sync Detection
+
+When a certificate has a `health_check` configured, the dashboard compares:
+- **Disk fingerprint**: The certificate written to the filesystem
+- **Memory fingerprint**: The certificate the service is actually serving via TLS
+
+If these differ, the certificate is marked as "OUT OF SYNC" in the dashboard. This indicates the certificate was renewed but the service hasn't reloaded it yet.
+
+The dashboard shows:
+- Purple "OUT OF SYNC" badge next to affected certificates
+- "Sync Now" button (instead of "Rotate") to trigger rotation and service reload
+- Out-of-sync count in the aggregator summary bar
+
+Clicking "Sync Now" rotates the certificate and runs the configured `on_change` script to reload the service.
 
 ## CLI Options
 
@@ -275,6 +291,26 @@ curl http://localhost:9101/api/status
 # Web dashboard
 open http://localhost:9101/
 ```
+
+The `/api/status` endpoint returns JSON with certificate details:
+
+```json
+[
+  {
+    "name": "consul-client",
+    "common_name": "client.dc1.consul",
+    "not_after": "2025-02-24T10:30:00Z",
+    "days_left": 30,
+    "fingerprint": "abc123...",
+    "memory_fingerprint": "abc123...",
+    "out_of_sync": false,
+    "last_renewed": "2025-01-24T10:30:00Z",
+    "status": "healthy"
+  }
+]
+```
+
+The `memory_fingerprint` and `out_of_sync` fields are only populated when a `health_check` is configured for the certificate.
 
 ### Rotation Endpoints
 

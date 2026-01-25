@@ -80,6 +80,22 @@
         .status-expiring { background: var(--yellow); }
         .status-critical { background: var(--red); animation: pulse 2s infinite; }
         .status-unknown { background: var(--bg-tertiary); }
+        .out-of-sync-badge {
+            background: var(--mauve);
+            color: var(--bg-primary);
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        .cert-card.out-of-sync {
+            border: 1px solid var(--mauve);
+        }
+        .btn-warning {
+            background: var(--mauve);
+            color: var(--bg-primary);
+        }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -136,18 +152,18 @@
 
         <div class="certs-grid">
             {{range .Certs}}
-            <div class="cert-card" data-cert="{{.Name}}">
+            <div class="cert-card{{if .OutOfSync}} out-of-sync{{end}}" data-cert="{{.Name}}">
                 <div class="status-indicator status-{{.Status}}"></div>
                 <div class="cert-info">
-                    <h3>{{.Name}}</h3>
+                    <h3>{{.Name}}{{if .OutOfSync}}<span class="out-of-sync-badge">OUT OF SYNC</span>{{end}}</h3>
                     <div class="cert-meta">
                         <span>CN: {{.CommonName}}</span>
                         <span>Expires: {{formatTime .NotAfter}}</span>
                         <span class="days-left {{.Status}}">{{.DaysLeft}} days left</span>
                     </div>
-                    <div class="fingerprint" title="{{.Fingerprint}}">{{.Fingerprint}}</div>
+                    <div class="fingerprint" title="Disk: {{.Fingerprint}}{{if .MemoryFingerprint}}&#10;Memory: {{.MemoryFingerprint}}{{end}}">{{.Fingerprint}}</div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="rotateCert('{{.Name}}')">Rotate</button>
+                <button class="btn {{if .OutOfSync}}btn-warning{{else}}btn-primary{{end}} btn-sm" onclick="rotateCert('{{.Name}}')">{{if .OutOfSync}}Sync Now{{else}}Rotate{{end}}</button>
             </div>
             {{else}}
             <p style="color: var(--text-secondary);">No certificates configured.</p>
@@ -169,12 +185,17 @@
             if (!confirm('Rotate all certificates?')) return;
             try {
                 const res = await fetch('/api/rotate/all', { method: 'POST' });
-                const data = await res.json();
+                const text = await res.text();
                 if (res.ok) {
                     showToast('All certificates rotated successfully');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showToast(data.error || 'Rotation failed', 'error');
+                    try {
+                        const data = JSON.parse(text);
+                        showToast(data.error || 'Rotation failed', 'error');
+                    } catch {
+                        showToast(text || 'Rotation failed', 'error');
+                    }
                 }
             } catch (e) {
                 showToast('Request failed: ' + e.message, 'error');
@@ -185,12 +206,17 @@
             if (!confirm('Rotate certificate: ' + name + '?')) return;
             try {
                 const res = await fetch('/api/rotate/' + name, { method: 'POST' });
-                const data = await res.json();
+                const text = await res.text();
                 if (res.ok) {
                     showToast('Certificate ' + name + ' rotated');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showToast(data.error || 'Rotation failed', 'error');
+                    try {
+                        const data = JSON.parse(text);
+                        showToast(data.error || 'Rotation failed', 'error');
+                    } catch {
+                        showToast(text || 'Rotation failed', 'error');
+                    }
                 }
             } catch (e) {
                 showToast('Request failed: ' + e.message, 'error');

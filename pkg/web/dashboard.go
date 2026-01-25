@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"cert-manager/pkg/cert"
+	"cert-manager/pkg/health"
 )
 
 //go:embed templates/*.html
@@ -26,23 +27,26 @@ var templateFS embed.FS
 
 // Dashboard provides HTTP handlers for the web interface.
 type Dashboard struct {
-	certManager *cert.Manager
-	templates   *template.Template
+	certManager   *cert.Manager
+	healthChecker health.Checker
+	templates     *template.Template
 }
 
 // CertStatus represents certificate status for the dashboard.
 type CertStatus struct {
-	Name        string    `json:"name"`
-	CommonName  string    `json:"common_name"`
-	NotAfter    time.Time `json:"not_after"`
-	DaysLeft    int       `json:"days_left"`
-	Fingerprint string    `json:"fingerprint"`
-	LastRenewed time.Time `json:"last_renewed"`
-	Status      string    `json:"status"` // "healthy", "expiring", "critical"
+	Name              string    `json:"name"`
+	CommonName        string    `json:"common_name"`
+	NotAfter          time.Time `json:"not_after"`
+	DaysLeft          int       `json:"days_left"`
+	Fingerprint       string    `json:"fingerprint"`
+	MemoryFingerprint string    `json:"memory_fingerprint,omitempty"`
+	OutOfSync         bool      `json:"out_of_sync"`
+	LastRenewed       time.Time `json:"last_renewed"`
+	Status            string    `json:"status"` // "healthy", "expiring", "critical", "out_of_sync"
 }
 
 // NewDashboard creates a new dashboard instance.
-func NewDashboard(certManager *cert.Manager) *Dashboard {
+func NewDashboard(certManager *cert.Manager, healthChecker health.Checker) *Dashboard {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
 		"formatTime": func(t time.Time) string {
 			if t.IsZero() {
@@ -53,8 +57,9 @@ func NewDashboard(certManager *cert.Manager) *Dashboard {
 	}).ParseFS(templateFS, "templates/*.html"))
 
 	return &Dashboard{
-		certManager: certManager,
-		templates:   tmpl,
+		certManager:   certManager,
+		healthChecker: healthChecker,
+		templates:     tmpl,
 	}
 }
 
@@ -178,6 +183,17 @@ func (d *Dashboard) getCertStatuses() []CertStatus {
 			}
 		} else {
 			status.Status = "unknown"
+		}
+
+		// Check if certificate is out of sync (disk != memory)
+		if d.healthChecker != nil && managed.Config.HealthCheck != nil {
+			result, err := d.healthChecker.Check(managed)
+			if err == nil && result.Success && result.RemoteFingerprint != "" {
+				status.MemoryFingerprint = result.RemoteFingerprint
+				if managed.Fingerprint != "" && result.RemoteFingerprint != managed.Fingerprint {
+					status.OutOfSync = true
+				}
+			}
 		}
 
 		statuses = append(statuses, status)

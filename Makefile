@@ -10,7 +10,7 @@
 
 .PHONY: help build build-linux build-linux-arm64 test test-all test-coverage test-integration \
         lint clean deps install run generate-mocks fmt vet check build-all dev-build \
-        build-deb build-deb-arm64 lint-deb
+        build-deb build-deb-arm64 lint-deb prep-changelog
 
 # --- Build variables ---
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -124,7 +124,7 @@ install: build
 
 # Run with example config
 run: build
-4$(BIN_DIR)/$(BINARY) --config examples/config.yaml
+	$(BIN_DIR)/$(BINARY) --config examples/config.yaml
 
 # Show version info that would be embedded
 version:
@@ -134,15 +134,19 @@ version:
 
 # --- Debian Packaging ---
 
+# Prepare changelog for Debian packaging
+prep-changelog:
+	@gzip -9 -n -c packaging/changelog > packaging/changelog.gz
+
 # Build Debian package for amd64
-build-deb: build-linux
+build-deb: build-linux prep-changelog
 	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-amd64 $(BIN_DIR)/$(BINARY)-linux
 	VERSION=$(DEB_VERSION) GOARCH=amd64 nfpm package --packager deb --target $(DEB_DIR)/
 	@rm -f $(BIN_DIR)/$(BINARY)-linux
 
 # Build Debian package for arm64
-build-deb-arm64: build-linux-arm64
+build-deb-arm64: build-linux-arm64 prep-changelog
 	@mkdir -p $(DEB_DIR)
 	@cp $(BIN_DIR)/$(BINARY)-linux-arm64 $(BIN_DIR)/$(BINARY)-linux
 	VERSION=$(DEB_VERSION) GOARCH=arm64 nfpm package --packager deb --target $(DEB_DIR)/
