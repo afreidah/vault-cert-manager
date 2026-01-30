@@ -201,3 +201,4 @@ publish-deb:
 	@curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
 		-X DELETE "$(APTLY_URL)/api/files/$(BINARY)" || true
 	@echo "Published successfully!"
+
