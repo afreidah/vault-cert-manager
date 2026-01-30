@@ -10,7 +10,7 @@
 
 .PHONY: help build build-linux build-linux-arm64 test test-all test-coverage test-integration \
         lint clean deps install run generate-mocks fmt vet check build-all dev-build \
-        build-deb build-deb-arm64 lint-deb prep-changelog
+        build-deb build-deb-arm64 lint-deb prep-changelog publish-deb
 
 # --- Build variables ---
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -166,3 +166,38 @@ else
 		lintian --verbose $$deb || true; \
 	done
 endif
+
+# --- Aptly Publishing ---
+
+APTLY_URL ?= https://apt.munchbox.cc
+APTLY_REPO ?= munchbox
+APTLY_USER ?= admin
+SNAPSHOT_NAME ?= $(BINARY)-$(shell date +%Y%m%d-%H%M%S)
+
+# Publish packages to Aptly repo
+publish-deb:
+	@if [ -z "$(APTLY_PASS)" ]; then echo "Error: APTLY_PASS not set (source munchbox-env.sh)"; exit 1; fi
+	@echo "Publishing packages to $(APTLY_URL)..."
+	@for deb in $(DEB_DIR)/*.deb; do \
+		echo "Uploading $$(basename $$deb)..."; \
+		curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
+			-X POST -F "file=@$$deb" \
+			"$(APTLY_URL)/api/files/$(BINARY)" || exit 1; \
+	done
+	@echo "Adding packages to repo $(APTLY_REPO)..."
+	@curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
+		-X POST "$(APTLY_URL)/api/repos/$(APTLY_REPO)/file/$(BINARY)" || exit 1
+	@echo "Creating snapshot $(SNAPSHOT_NAME)..."
+	@curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
+		-X POST -H 'Content-Type: application/json' \
+		-d '{"Name":"$(SNAPSHOT_NAME)"}' \
+		"$(APTLY_URL)/api/repos/$(APTLY_REPO)/snapshots" || exit 1
+	@echo "Updating published repo..."
+	@curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
+		-X PUT -H 'Content-Type: application/json' \
+		-d '{"Snapshots":[{"Component":"main","Name":"$(SNAPSHOT_NAME)"}],"ForceOverwrite":true}' \
+		'$(APTLY_URL)/api/publish/:./stable' || exit 1
+	@echo "Cleaning up uploaded files..."
+	@curl -fsS -u "$(APTLY_USER):$(APTLY_PASS)" \
+		-X DELETE "$(APTLY_URL)/api/files/$(BINARY)" || true
+	@echo "Published successfully!"
