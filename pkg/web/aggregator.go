@@ -8,6 +8,7 @@
 package web
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -181,11 +182,15 @@ func (a *Aggregator) handleDashboard(w http.ResponseWriter, r *http.Request) {
 		Nodes: statuses,
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := a.templates.ExecuteTemplate(w, "aggregator.html", data); err != nil {
+	var buf bytes.Buffer
+	if err := a.templates.ExecuteTemplate(&buf, "aggregator.html", data); err != nil {
 		slog.Error("Failed to render dashboard", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = buf.WriteTo(w)
 }
 
 // handleAPIStatus returns aggregated status as JSON.
